@@ -17,8 +17,10 @@ import {
 } from "@chakra-ui/react";
 import styles from "../styles/TransactionHistory.module.css";
 // import { CLAIM_TOKEN_CONTRACT_ADDRESS } from "../const/addresses";
-import { CLAIM_TOKEN_CONTRACT_ADDRESS, TOKEN_ADDRESSES } from "../const/addresses";
-
+import { CLAIM_TOKEN_CONTRACT_ADDRESS } from "../const/addresses";
+import { CFA_TOKEN_CONTRACT_ADDRESS } from "../const/addresses";
+import { EURA_TOKEN_CONTRACT_ADDRESS } from "../const/addresses";
+import { USDA_TOKEN_CONTRACT_ADDRESS } from "../const/addresses";
 type CustomTransaction = {
   transfers: LogEvent[];
   from_Address: string;
@@ -42,7 +44,7 @@ const formatAmount = (delta: string) => {
 };
 
 const TransactionHistoryPage: React.FC = () => {
-  const { contract } = useContract(CLAIM_TOKEN_CONTRACT_ADDRESS, "token-drop");
+  const { contract } = useContract(CLAIM_TOKEN_CONTRACT_ADDRESS, "mamaDo");
 
   const { data: contractMetadata } = useContractMetadata(contract);
   const [transactions, setTransactions] = useState<CustomTransaction[]>([]);
