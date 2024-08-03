@@ -27,7 +27,7 @@
     "@vercel/speed-insights": "^1.0.2",
     "aws-sdk": "^2.1524.0",
     "dotenv": "^16.3.1",
-    "ethers": "5.7.2",
+    "ethers": "5",
     "framer-motion": "^10.12.16",
     "global": "^4.4.0",
     "html2canvas": "^1.4.1",
