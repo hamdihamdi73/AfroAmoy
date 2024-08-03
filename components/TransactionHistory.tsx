@@ -74,7 +74,7 @@ const TransactionHistoryPage: React.FC = () => {
         const targetAddress = address;
 
         for await (const item of await client.TransactionService.getAllTransactionsForAddress(
-          "80002",
+          "polygon-amoy-testnet",
           walletAddress,
           { quoteCurrency: "USD" }
         )) {
