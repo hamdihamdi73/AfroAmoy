@@ -5880,7 +5880,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@thirdweb-dev/chains@npm:0.1.120, @thirdweb-dev/chains@npm:^0.1.120":
+"@thirdweb-dev/chains@npm:0.1.120":
   version: 0.1.120
   resolution: "@thirdweb-dev/chains@npm:0.1.120"
   checksum: 10c0/1f7d64618febedcb6f37532cf8cf0f306eebe7da79892537e8dd936a1eecc9a525efc8e6d077ab30f04854b514963b45dbb246ebc6fbe8a08539235f1866ac37
@@ -5975,7 +5975,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@thirdweb-dev/react@npm:^4.9.4":
+"@thirdweb-dev/react@npm:^4.6.22":
   version: 4.9.4
   resolution: "@thirdweb-dev/react@npm:4.9.4"
   dependencies:
@@ -6071,7 +6071,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@thirdweb-dev/wallets@npm:2.5.39, @thirdweb-dev/wallets@npm:^2.5.39":
+"@thirdweb-dev/wallets@npm:2.5.39, @thirdweb-dev/wallets@npm:^2.1.10":
   version: 2.5.39
   resolution: "@thirdweb-dev/wallets@npm:2.5.39"
   dependencies:
@@ -6996,11 +6996,10 @@ __metadata:
     "@covalenthq/client-sdk": "npm:^1.0.2"
     "@emotion/react": "npm:^11.11.1"
     "@emotion/styled": "npm:^11.11.0"
-    "@thirdweb-dev/chains": "npm:^0.1.120"
-    "@thirdweb-dev/react": "npm:^4.9.4"
+    "@thirdweb-dev/react": "npm:^4.6.22"
     "@thirdweb-dev/sdk": "npm:^4.0.99"
     "@thirdweb-dev/tsconfig": "npm:^0.1.7"
-    "@thirdweb-dev/wallets": "npm:^2.5.39"
+    "@thirdweb-dev/wallets": "npm:^2.1.10"
     "@types/dom-to-image": "npm:^2.6.7"
     "@types/dotenv": "npm:^8.2.0"
     "@types/node": "npm:^18.11.11"
@@ -7013,7 +7012,7 @@ __metadata:
     dotenv: "npm:^16.3.1"
     eslint: "npm:^8.29.0"
     eslint-config-next: "npm:^14.2.5"
-    ethers: "npm:5"
+    ethers: "npm:5.7.2"
     framer-motion: "npm:^10.12.16"
     global: "npm:^4.4.0"
     html2canvas: "npm:^1.4.1"
@@ -9648,7 +9647,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ethers@npm:5, ethers@npm:5.7.2, ethers@npm:^5.7.2":
+"ethers@npm:5.7.2, ethers@npm:^5.7.2":
   version: 5.7.2
   resolution: "ethers@npm:5.7.2"
   dependencies:
