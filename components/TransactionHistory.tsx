@@ -190,17 +190,18 @@ const TransactionHistoryPage: React.FC = () => {
                     mb={2}
                   >
                     <span
-                      className={`${styles.indicator} ${styles[
-                        getTransactionType(
-                          transaction.to_Address,
-                          transaction.from_Address,
-                          formatAmount(
-                            transaction.transfers?.[0].decoded?.params?.[2]
-                              .value || "0"
+                      className={`${styles.indicator} ${
+                        styles[
+                          getTransactionType(
+                            transaction.to_Address,
+                            transaction.from_Address,
+                            formatAmount(
+                              transaction.transfers?.[0].decoded?.params?.[2]
+                                .value || "0"
+                            )
                           )
-                        )
                         ]
-                        }`}
+                      }`}
                     />
                     <Text ml={2} fontSize={["xs", "sm"]} whiteSpace="nowrap">
                       {getTransactionTypeText(
