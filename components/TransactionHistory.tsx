@@ -20,10 +20,10 @@ import { CLAIM_TOKEN_CONTRACT_ADDRESS } from "../const/addresses";
 type Transaction = {
   hash: string;
   from: string;
-  to: string;
+  to: string | null;
   value: string;
   asset: string;
-  category: string;
+  category: AssetTransfersCategory;
   timestamp: number;
 };
 
@@ -70,7 +70,7 @@ const TransactionHistoryPage: React.FC = () => {
         const formattedTransactions: Transaction[] = data.transfers.map((tx) => ({
           hash: tx.hash,
           from: tx.from,
-          to: tx.to,
+          to: tx.to ?? null,
           value: tx.value?.toString() || "0",
           asset: tx.asset || "MATIC",
           category: tx.category,
@@ -88,8 +88,8 @@ const TransactionHistoryPage: React.FC = () => {
     fetchTransactionHistory();
   }, [address]);
 
-  const getTransactionType = (category: string, to: string): string => {
-    if (to.toLowerCase() === address?.toLowerCase()) {
+  const getTransactionType = (category: AssetTransfersCategory, to: string | null): string => {
+    if (to && address && to.toLowerCase() === address.toLowerCase()) {
       return "received";
     } else if (category === AssetTransfersCategory.EXTERNAL) {
       return "transfer";
