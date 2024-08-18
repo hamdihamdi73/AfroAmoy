@@ -41,7 +41,7 @@ const formatAmount = (delta: string) => {
 };
 
 const TransactionHistoryPage: React.FC = () => {
-  const { contract } = useContract(CALIM_TOKEN_CONTRACT_ADDRESS, "token-drop");
+  const { contract } = useContract(CLAIM_TOKEN_CONTRACT_ADDRESS, "token-drop");
 
   const { data: contractMetadata } = useContractMetadata(contract);
   const [transactions, setTransactions] = useState<CustomTransaction[]>([]);
