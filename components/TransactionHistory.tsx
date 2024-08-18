@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { CovalentClient, LogEvent } from "@covalenthq/client-sdk";
+import { CovalentClient } from "@covalenthq/client-sdk";
+import type { LogEvent } from "@covalenthq/client-sdk";
 import {
   useAddress,
   useContract,
