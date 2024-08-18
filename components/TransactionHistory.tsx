@@ -197,7 +197,7 @@ const TransactionHistoryPage: React.FC = () => {
                             transaction.from_Address,
                             formatAmount(
                               transaction.transfers?.[0].decoded?.params?.[2]
-                                .value || "0"
+                                ?.value || "0"
                             )
                           )
                         ]
