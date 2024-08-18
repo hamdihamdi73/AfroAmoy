@@ -6,6 +6,7 @@ import {
   useContractMetadata,
 } from "@thirdweb-dev/react";
 import styles from "../styles/CashInOutForm.module.css";
+import { useEffect, useState } from "react";
 
 type Props = {
   tokenAddress: string;
