@@ -160,7 +160,7 @@ const TransactionHistoryPage: React.FC = () => {
                       <ChakraLink
                         fontSize={["xs", "sm"]}
                         isTruncated
-                        href={`https://mumbai.polygonscan.com/tx/${transaction.hash}`}
+                        href={`https://amoy.polygonscan.com/tx/${transaction.hash}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         color="blue.500"
