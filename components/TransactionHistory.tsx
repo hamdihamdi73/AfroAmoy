@@ -61,13 +61,22 @@ const TransactionHistoryPage: React.FC = () => {
         };
         const alchemy = new Alchemy(config);
 
-        const data = await alchemy.core.getAssetTransfers({
-          fromBlock: "0x0",
-          fromAddress: address,
-          category: [AssetTransfersCategory.EXTERNAL, AssetTransfersCategory.INTERNAL, AssetTransfersCategory.ERC20],
-        });
+        const [fromData, toData] = await Promise.all([
+          alchemy.core.getAssetTransfers({
+            fromBlock: "0x0",
+            fromAddress: address,
+            category: [AssetTransfersCategory.EXTERNAL, AssetTransfersCategory.INTERNAL, AssetTransfersCategory.ERC20],
+          }),
+          alchemy.core.getAssetTransfers({
+            fromBlock: "0x0",
+            toAddress: address,
+            category: [AssetTransfersCategory.EXTERNAL, AssetTransfersCategory.INTERNAL, AssetTransfersCategory.ERC20],
+          })
+        ]);
 
-        const formattedTransactions: Transaction[] = data.transfers.map((tx) => ({
+        const allTransfers = [...fromData.transfers, ...toData.transfers];
+
+        const formattedTransactions: Transaction[] = allTransfers.map((tx) => ({
           hash: tx.hash,
           from: tx.from,
           to: tx.to ?? null,
@@ -77,7 +86,10 @@ const TransactionHistoryPage: React.FC = () => {
           timestamp: tx.blockTimestamp ? new Date(tx.blockTimestamp).getTime() : 0,
         }));
 
-        setTransactions(formattedTransactions);
+        // Sort transactions by timestamp in descending order (most recent first)
+        const sortedTransactions = formattedTransactions.sort((a, b) => b.timestamp - a.timestamp);
+
+        setTransactions(sortedTransactions);
       } catch (error) {
         console.error("Error fetching transaction history:", error);
       } finally {
