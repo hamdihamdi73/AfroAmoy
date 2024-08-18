@@ -4,7 +4,6 @@ import {
   useAddress,
   useContract,
   useContractMetadata,
-  
 } from "@thirdweb-dev/react";
 import {
   Heading,
@@ -16,11 +15,8 @@ import {
   Button,
 } from "@chakra-ui/react";
 import styles from "../styles/TransactionHistory.module.css";
-// import { CLAIM_TOKEN_CONTRACT_ADDRESS } from "../const/addresses";
-import { CLAIM_TOKEN_CONTRACT_ADDRESS } from "../const/addresses";
-import { CFA_TOKEN_CONTRACT_ADDRESS } from "../const/addresses";
-import { EURA_TOKEN_CONTRACT_ADDRESS } from "../const/addresses";
-import { USDA_TOKEN_CONTRACT_ADDRESS } from "../const/addresses";
+import { CALIM_TOKEN_CONTRACT_ADDRESS } from "../const/addresses";
+
 type CustomTransaction = {
   transfers: LogEvent[];
   from_Address: string;
@@ -44,7 +40,7 @@ const formatAmount = (delta: string) => {
 };
 
 const TransactionHistoryPage: React.FC = () => {
-  const { contract } = useContract(CLAIM_TOKEN_CONTRACT_ADDRESS, "mamaDo");
+  const { contract } = useContract(CALIM_TOKEN_CONTRACT_ADDRESS, "token-drop");
 
   const { data: contractMetadata } = useContractMetadata(contract);
   const [transactions, setTransactions] = useState<CustomTransaction[]>([]);
@@ -55,7 +51,7 @@ const TransactionHistoryPage: React.FC = () => {
   useEffect(() => {
     const fetchTransactionHistory = async () => {
       try {
-        const covalentApiKey = process.env.COVALENT_API_KEY;
+        const covalentApiKey = process.env.COVALENT_API_KEY || "ckey_8fb0fa176c3a4ff7ba218b0862a";
 
         if (!covalentApiKey) {
           console.error("API key is missing.");
@@ -74,7 +70,7 @@ const TransactionHistoryPage: React.FC = () => {
         const targetAddress = address;
 
         for await (const item of await client.TransactionService.getAllTransactionsForAddress(
-          "polygon-amoy-testnet",
+          "base-mainn",
           walletAddress,
           { quoteCurrency: "USD" }
         )) {
@@ -127,11 +123,11 @@ const TransactionHistoryPage: React.FC = () => {
     from_Address: string,
     amount: string
   ): string => {
-    if (to_Address === "0x29549757C5597c529efCD2F8d0732F81c2fD1A1D") {
+    if (to_Address === "0x723a159b280e23889e78ae3c397b52cca21ecd3b") {
       return "fee";
-    } else if (to_Address === "0x24e439514Fc3DE79EE22e36fC52234b2944317E0") {
+    } else if (to_Address === "0x2f0865ce08e27d9d8e45a14a51e47f42930c9ac9") {
       return "withdraw";
-    } else if (from_Address === "0x29549757C5597c529efCD2F8d0732F81c2fD1A1D") {
+    } else if (from_Address === "0x504b92cc567a334eb8c5c021e91f3f84a2c5f7a7") {
       return "deposit";
     } else if (to_Address.toLowerCase() === address?.toLowerCase()) {
       return "received";
@@ -223,7 +219,7 @@ const TransactionHistoryPage: React.FC = () => {
                       <ChakraLink
                         fontSize={["xs", "sm"]}
                         isTruncated
-                        href={`https://amoy.polygonscan.com//tx/${transaction.tx_hash}`}
+                        href={`https://basescan.org/tx/${transaction.tx_hash}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         color="blue.500" // Set the link color
