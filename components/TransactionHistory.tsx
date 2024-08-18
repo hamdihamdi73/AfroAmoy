@@ -1,164 +1,105 @@
 import React, { useEffect, useState } from "react";
-import { CovalentClient } from "@covalenthq/client-sdk";
-import type { LogEvent } from "@covalenthq/client-sdk";
+import { Alchemy, Network, AssetTransfersCategory } from "alchemy-sdk";
 import {
   useAddress,
   useContract,
   useContractMetadata,
 } from "@thirdweb-dev/react";
 import {
-  Heading,
   Flex,
   Text,
   Box,
   SimpleGrid,
   Link as ChakraLink,
   Button,
+  Spinner,
 } from "@chakra-ui/react";
 import styles from "../styles/TransactionHistory.module.css";
 import { CLAIM_TOKEN_CONTRACT_ADDRESS } from "../const/addresses";
 
-type CustomTransaction = {
-  transfers: LogEvent[];
-  from_Address: string;
-  to_Address: string;
-  block_signed_at: Date;
-  block_height: number;
-  block_hash: string;
-  tx_hash: string;
-  tx_offset: number;
-  successful: boolean;
+type Transaction = {
+  hash: string;
+  from: string;
+  to: string;
+  value: string;
+  asset: string;
+  category: string;
+  timestamp: number;
 };
 
-const formatAmount = (delta: string) => {
-  const parsedDelta = BigInt(delta);
-  const above18Decimals = parsedDelta / BigInt(10 ** 18);
-  const formattedAmount = above18Decimals.toLocaleString(undefined, {
+const formatAmount = (value: string, decimals: number = 18) => {
+  const parsedValue = BigInt(value);
+  const formattedAmount = Number(parsedValue) / 10 ** decimals;
+  return formattedAmount.toLocaleString(undefined, {
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    maximumFractionDigits: 6,
   });
-  return formattedAmount;
 };
 
 const TransactionHistoryPage: React.FC = () => {
   const { contract } = useContract(CLAIM_TOKEN_CONTRACT_ADDRESS, "token-drop");
-
   const { data: contractMetadata } = useContractMetadata(contract);
-  const [transactions, setTransactions] = useState<CustomTransaction[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
   const transactionsPerPage = 5;
   const address = useAddress();
 
   useEffect(() => {
     const fetchTransactionHistory = async () => {
+      if (!address) {
+        console.error("Wallet address is undefined.");
+        return;
+      }
+
+      setIsLoading(true);
+
       try {
-        const covalentApiKey = process.env.COVALENT_API_KEY || "ckey_8fb0fa176c3a4ff7ba218b0862a";
+        const config = {
+          apiKey: process.env.NEXT_PUBLIC_ALCHEMY_API_KEY,
+          network: Network.MATIC_MUMBAI,
+        };
+        const alchemy = new Alchemy(config);
 
-        if (!covalentApiKey) {
-          console.error("API key is missing.");
-          return;
-        }
+        const data = await alchemy.core.getAssetTransfers({
+          fromBlock: "0x0",
+          fromAddress: address,
+          category: [AssetTransfersCategory.EXTERNAL, AssetTransfersCategory.INTERNAL, AssetTransfersCategory.ERC20],
+        });
 
-        if (address === undefined) {
-          console.error("Wallet address is undefined.");
-          return;
-        }
+        const formattedTransactions: Transaction[] = data.transfers.map((tx) => ({
+          hash: tx.hash,
+          from: tx.from,
+          to: tx.to,
+          value: tx.value?.toString() || "0",
+          asset: tx.asset || "MATIC",
+          category: tx.category,
+          timestamp: tx.metadata.blockTimestamp ? new Date(tx.metadata.blockTimestamp).getTime() : 0,
+        }));
 
-        const client = new CovalentClient(covalentApiKey);
-        const walletAddress: string = address;
-
-        const response: CustomTransaction[] = [];
-        const targetAddress = address;
-
-        for await (const item of await client.TransactionService.getAllTransactionsForAddress(
-          "polygon-amoy-testnet",
-          walletAddress,
-          { quoteCurrency: "USD" }
-        )) {
-          const logEvents = item.log_events || [];
-          const filteredTransfers = logEvents.filter(
-            (log) =>
-              log.decoded &&
-              log.decoded.signature ===
-              "Transfer(indexed address from, indexed address to, uint256 value)" &&
-              log.decoded.params &&
-              log.decoded.params.length > 0 &&
-              (log.decoded.params[0].value.toLowerCase() ===
-                targetAddress.toLowerCase() ||
-                log.decoded.params[1].value.toLowerCase() ===
-                targetAddress.toLowerCase())
-          );
-
-          if (filteredTransfers && filteredTransfers.length > 0) {
-            const fromAddress = filteredTransfers[0].decoded.params.find(
-              (param) => param.name === "from"
-            )?.value;
-            const toAddress = filteredTransfers[0].decoded.params.find(
-              (param) => param.name === "to"
-            )?.value;
-
-            response.push({
-              ...item,
-              transfers: filteredTransfers,
-              from_Address: fromAddress || "",
-              to_Address: toAddress || "",
-            });
-          }
-        }
-
-        setTransactions(response);
+        setTransactions(formattedTransactions);
       } catch (error) {
-        if (error instanceof Error) {
-          console.error(error.message);
-        } else {
-          console.error("An unknown error occurred.");
-        }
+        console.error("Error fetching transaction history:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchTransactionHistory();
-  }, [address, currentPage]);
+  }, [address]);
 
-  const getTransactionType = (
-    to_Address: string,
-    from_Address: string,
-    amount: string
-  ): string => {
-    if (to_Address === "0x723a159b280e23889e78ae3c397b52cca21ecd3b") {
-      return "fee";
-    } else if (to_Address === "0x2f0865ce08e27d9d8e45a14a51e47f42930c9ac9") {
-      return "withdraw";
-    } else if (from_Address === "0x504b92cc567a334eb8c5c021e91f3f84a2c5f7a7") {
-      return "deposit";
-    } else if (to_Address.toLowerCase() === address?.toLowerCase()) {
+  const getTransactionType = (category: string, to: string): string => {
+    if (to.toLowerCase() === address?.toLowerCase()) {
       return "received";
-    } else {
+    } else if (category === AssetTransfersCategory.EXTERNAL) {
       return "transfer";
+    } else if (category === AssetTransfersCategory.INTERNAL) {
+      return "internal";
+    } else {
+      return "token";
     }
   };
 
-  const getTransactionTypeText = (
-    toAddress: string,
-    fromAddress: string,
-    amount: string
-  ): string => {
-    const transactionType = getTransactionType(toAddress, fromAddress, amount);
-
-    switch (transactionType) {
-      case "fee":
-        return "Fee";
-      case "withdraw":
-        return "Withdraw";
-      case "deposit":
-        return "Deposit";
-      case "received":
-        return "Received";
-      case "transfer":
-        return "Transfer";
-      default:
-        return "Unknown";
-    }
-  };
   const handleNextPage = () => {
     setCurrentPage((prevPage) => prevPage + 1);
   };
@@ -169,7 +110,9 @@ const TransactionHistoryPage: React.FC = () => {
 
   return (
     <Flex direction="column" align="center" p={4} width="100%" height="100%">
-      {transactions.length === 0 ? (
+      {isLoading ? (
+        <Spinner />
+      ) : transactions.length === 0 ? (
         <Text>No transactions found.</Text>
       ) : (
         <Box overflowX="auto" width="100%">
@@ -181,7 +124,7 @@ const TransactionHistoryPage: React.FC = () => {
               )
               .map((transaction) => (
                 <Box
-                  key={transaction.tx_hash}
+                  key={transaction.hash}
                   className={styles.transactionItem}
                 >
                   <Flex
@@ -191,27 +134,11 @@ const TransactionHistoryPage: React.FC = () => {
                   >
                     <span
                       className={`${styles.indicator} ${
-                        styles[
-                          getTransactionType(
-                            transaction.to_Address,
-                            transaction.from_Address,
-                            formatAmount(
-                              transaction.transfers?.[0].decoded?.params?.[2]
-                                ?.value || "0"
-                            )
-                          )
-                        ]
+                        styles[getTransactionType(transaction.category, transaction.to)]
                       }`}
                     />
                     <Text ml={2} fontSize={["xs", "sm"]} whiteSpace="nowrap">
-                      {getTransactionTypeText(
-                        transaction.to_Address,
-                        transaction.from_Address,
-                        formatAmount(
-                          transaction.transfers?.[0].decoded?.params?.[2]
-                            .value || "0"
-                        )
-                      )}
+                      {getTransactionType(transaction.category, transaction.to)}
                     </Text>
                   </Flex>
                   <Flex direction="column" alignItems="left" textAlign="left">
@@ -221,11 +148,11 @@ const TransactionHistoryPage: React.FC = () => {
                       <ChakraLink
                         fontSize={["xs", "sm"]}
                         isTruncated
-                        href={`https://basescan.org/tx/${transaction.tx_hash}`}
+                        href={`https://mumbai.polygonscan.com/tx/${transaction.hash}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        color="blue.500" // Set the link color
-                        textDecoration="underline" // Add underline to the link
+                        color="blue.500"
+                        textDecoration="underline"
                       >
                         Show Transaction Details
                       </ChakraLink>
@@ -233,29 +160,26 @@ const TransactionHistoryPage: React.FC = () => {
                     <div>
                       <span className={styles.label}>Amount:</span>{" "}
                       <Text fontSize={["xs", "sm"]} isTruncated>
-                        {formatAmount(
-                          transaction.transfers?.[0].decoded?.params?.[2]
-                            .value || "0"
-                        )}{" "}
-                        <b>{contractMetadata?.symbol}</b>
+                        {formatAmount(transaction.value)}{" "}
+                        <b>{transaction.asset}</b>
                       </Text>
                     </div>
                     <div>
                       <span className={styles.label}>To UID:</span>{" "}
                       <Text fontSize={["xs", "sm"]} isTruncated>
-                        {transaction.to_Address}
+                        {transaction.to}
                       </Text>
                     </div>
                     <div>
                       <span className={styles.label}>From UID:</span>{" "}
                       <Text fontSize={["xs", "sm"]} isTruncated>
-                        {transaction.from_Address}
+                        {transaction.from}
                       </Text>
                     </div>
                     <div>
                       <span className={styles.label}>Date:</span>{" "}
                       <Text fontSize={["xs", "sm"]} isTruncated>
-                        {new Date(transaction.block_signed_at).toLocaleString(
+                        {new Date(transaction.timestamp).toLocaleString(
                           "en-US",
                           {
                             month: "short",
