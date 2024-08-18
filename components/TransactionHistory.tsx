@@ -16,7 +16,7 @@ import {
   Button,
 } from "@chakra-ui/react";
 import styles from "../styles/TransactionHistory.module.css";
-import { CALIM_TOKEN_CONTRACT_ADDRESS } from "../const/addresses";
+import { CLAIM_TOKEN_CONTRACT_ADDRESS } from "../const/addresses";
 
 type CustomTransaction = {
   transfers: LogEvent[];
