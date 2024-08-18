@@ -74,7 +74,7 @@ const TransactionHistoryPage: React.FC = () => {
           value: tx.value?.toString() || "0",
           asset: tx.asset || "MATIC",
           category: tx.category,
-          timestamp: tx.metadata.blockTimestamp ? new Date(tx.metadata.blockTimestamp).getTime() : 0,
+          timestamp: tx.blockTimestamp ? new Date(tx.blockTimestamp).getTime() : 0,
         }));
 
         setTransactions(formattedTransactions);
