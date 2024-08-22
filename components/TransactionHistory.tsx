@@ -18,6 +18,8 @@ import {
   Tr,
   Th,
   Td,
+  Alert,
+  AlertIcon,
 } from "@chakra-ui/react";
 import { CLAIM_TOKEN_CONTRACT_ADDRESS } from "../const/addresses";
 
@@ -46,17 +48,19 @@ const TransactionHistoryPage: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const transactionsPerPage = 10;
   const address = useAddress();
 
   useEffect(() => {
     const fetchTransactionHistory = async () => {
       if (!address) {
-        console.error("Wallet address is undefined.");
+        setError("Wallet address is undefined. Please connect your wallet.");
         return;
       }
 
       setIsLoading(true);
+      setError(null);
 
       try {
         console.log("Fetching transaction history for address:", address);
@@ -105,6 +109,7 @@ const TransactionHistoryPage: React.FC = () => {
         console.log("Set transactions:", sortedTransactions);
       } catch (error) {
         console.error("Error fetching transaction history:", error);
+        setError("Failed to fetch transaction history. Please try again later.");
       } finally {
         setIsLoading(false);
       }
@@ -144,8 +149,14 @@ const TransactionHistoryPage: React.FC = () => {
   return (
     <Flex direction="column" align="center" p={4} width="100%" height="100%">
       <Text fontSize="2xl" fontWeight="bold" mb={4}>Transaction History</Text>
+      {error && (
+        <Alert status="error" mb={4}>
+          <AlertIcon />
+          {error}
+        </Alert>
+      )}
       {isLoading ? (
-        <Spinner />
+        <Spinner size="xl" />
       ) : transactions.length === 0 ? (
         <Text>No transactions found. (Transactions length: {transactions.length})</Text>
       ) : (
@@ -195,7 +206,7 @@ const TransactionHistoryPage: React.FC = () => {
             <Button onClick={handlePrevPage} disabled={currentPage === 1}>
               Previous
             </Button>
-            <Text>Page {currentPage}</Text>
+            <Text>Page {currentPage} of {Math.ceil(transactions.length / transactionsPerPage)}</Text>
             <Button
               onClick={handleNextPage}
               disabled={
