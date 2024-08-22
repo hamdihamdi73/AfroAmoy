@@ -62,7 +62,11 @@ const TransactionHistoryPage: React.FC = () => {
         console.log("Fetching transaction history for address:", address);
         const config: AlchemySettings = {
           apiKey: process.env.NEXT_PUBLIC_ALCHEMY_API_KEY,
-          network: Network.MATIC_MUMBAI, // Use Mumbai testnet as it's the closest to Amoy
+          network: Network.MATIC_MAINNET, // Use MATIC_MAINNET as Amoy is not directly supported
+          customNetwork: {
+            rpcUrl: "https://rpc-amoy.polygon.technology",
+            chainId: 80002,
+          },
         };
         const alchemy = new Alchemy(config);
 
