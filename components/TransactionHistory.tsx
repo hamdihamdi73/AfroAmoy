@@ -211,6 +211,12 @@ import {
   Link as ChakraLink,
   Button,
   Spinner,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
 } from "@chakra-ui/react";
 import styles from "../styles/TransactionHistory.module.css";
 import { CLAIM_TOKEN_CONTRACT_ADDRESS } from "../const/addresses";
@@ -240,7 +246,7 @@ const TransactionHistoryPage: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const transactionsPerPage = 5;
+  const transactionsPerPage = 10;
   const address = useAddress();
 
   useEffect(() => {
@@ -300,13 +306,13 @@ const TransactionHistoryPage: React.FC = () => {
 
   const getTransactionType = (category: AssetTransfersCategory, to: string | null): string => {
     if (to && address && to.toLowerCase() === address.toLowerCase()) {
-      return "received";
+      return "Received";
     } else if (category === AssetTransfersCategory.EXTERNAL) {
-      return "transfer";
+      return "Sent";
     } else if (category === AssetTransfersCategory.INTERNAL) {
-      return "internal";
+      return "Internal";
     } else {
-      return "token";
+      return "Token Transfer";
     }
   };
 
@@ -320,97 +326,58 @@ const TransactionHistoryPage: React.FC = () => {
 
   return (
     <Flex direction="column" align="center" p={4} width="100%" height="100%">
+      <Text fontSize="2xl" fontWeight="bold" mb={4}>Transaction History</Text>
       {isLoading ? (
         <Spinner />
       ) : transactions.length === 0 ? (
         <Text>No transactions found.</Text>
       ) : (
         <Box overflowX="auto" width="100%">
-          <SimpleGrid columns={[1]} spacing={4}>
-            {transactions
-              .slice(
-                (currentPage - 1) * transactionsPerPage,
-                currentPage * transactionsPerPage
-              )
-              .map((transaction) => (
-                <Box
-                  key={transaction.hash}
-                  className={styles.transactionItem}
-                >
-                  <Flex
-                    className={styles.indicatorContainer}
-                    align="center"
-                    mb={2}
-                  >
-                    <span
-                      className={`${styles.indicator} ${
-                        styles[getTransactionType(transaction.category, transaction.to)]
-                      }`}
-                    />
-                    <Text ml={2} fontSize={["xs", "sm"]} whiteSpace="nowrap">
-                      {getTransactionType(transaction.category, transaction.to)}
-                    </Text>
-                  </Flex>
-                  <Flex direction="column" alignItems="left" textAlign="left">
-                    <div>
-                      <span className={styles.label}>Transaction ID:</span>
-                      <br />
+          <Table variant="simple">
+            <Thead>
+              <Tr>
+                <Th>Type</Th>
+                <Th>Amount</Th>
+                <Th>Asset</Th>
+                <Th>From</Th>
+                <Th>To</Th>
+                <Th>Date</Th>
+                <Th>Details</Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {transactions
+                .slice(
+                  (currentPage - 1) * transactionsPerPage,
+                  currentPage * transactionsPerPage
+                )
+                .map((transaction) => (
+                  <Tr key={transaction.hash}>
+                    <Td>{getTransactionType(transaction.category, transaction.to)}</Td>
+                    <Td>{formatAmount(transaction.value)}</Td>
+                    <Td>{transaction.asset}</Td>
+                    <Td>{transaction.from.slice(0, 6)}...{transaction.from.slice(-4)}</Td>
+                    <Td>{transaction.to ? `${transaction.to.slice(0, 6)}...${transaction.to.slice(-4)}` : 'N/A'}</Td>
+                    <Td>{new Date(transaction.timestamp).toLocaleString()}</Td>
+                    <Td>
                       <ChakraLink
-                        fontSize={["xs", "sm"]}
-                        isTruncated
                         href={`https://amoy.polygonscan.com/tx/${transaction.hash}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         color="blue.500"
-                        textDecoration="underline"
                       >
-                        Show Transaction Details
+                        View
                       </ChakraLink>
-                    </div>
-                    <div>
-                      <span className={styles.label}>Amount:</span>{" "}
-                      <Text fontSize={["xs", "sm"]} isTruncated>
-                        {formatAmount(transaction.value)}{" "}
-                        <b>{transaction.asset}</b>
-                      </Text>
-                    </div>
-                    <div>
-                      <span className={styles.label}>To UID:</span>{" "}
-                      <Text fontSize={["xs", "sm"]} isTruncated>
-                        {transaction.to}
-                      </Text>
-                    </div>
-                    <div>
-                      <span className={styles.label}>From UID:</span>{" "}
-                      <Text fontSize={["xs", "sm"]} isTruncated>
-                        {transaction.from}
-                      </Text>
-                    </div>
-                    <div>
-                      <span className={styles.label}>Date:</span>{" "}
-                      <Text fontSize={["xs", "sm"]} isTruncated>
-                        {new Date(transaction.timestamp).toLocaleString(
-                          "en-US",
-                          {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                            hour: "numeric",
-                            minute: "numeric",
-                            second: "numeric",
-                            hour12: true,
-                          }
-                        )}
-                      </Text>
-                    </div>
-                  </Flex>
-                </Box>
-              ))}
-          </SimpleGrid>
+                    </Td>
+                  </Tr>
+                ))}
+            </Tbody>
+          </Table>
           <Flex justify="space-between" mt={4}>
             <Button onClick={handlePrevPage} disabled={currentPage === 1}>
               Previous
             </Button>
+            <Text>Page {currentPage}</Text>
             <Button
               onClick={handleNextPage}
               disabled={
