@@ -34,12 +34,25 @@ type Transaction = {
 };
 
 const formatAmount = (value: string, decimals: number = 18) => {
-  const parsedValue = BigInt(value);
-  const formattedAmount = Number(parsedValue) / 10 ** decimals;
-  return formattedAmount.toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 6,
-  });
+  try {
+    const parsedValue = BigInt(value);
+    const divisor = BigInt(10 ** decimals);
+    const wholePart = parsedValue / divisor;
+    const fractionalPart = parsedValue % divisor;
+    
+    let formattedAmount = wholePart.toString();
+    if (fractionalPart > 0) {
+      formattedAmount += '.' + fractionalPart.toString().padStart(decimals, '0').slice(0, 6);
+    }
+    
+    return parseFloat(formattedAmount).toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 6,
+    });
+  } catch (error) {
+    console.error("Error formatting amount:", error);
+    return "N/A";
+  }
 };
 
 const TransactionHistoryPage: React.FC = () => {
