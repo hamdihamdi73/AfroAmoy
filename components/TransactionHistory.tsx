@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Alchemy, Network } from "alchemy-sdk";
+import { Alchemy, Network, AlchemySettings } from "alchemy-sdk";
 import {
   useAddress,
   useContract,
@@ -59,9 +59,28 @@ const TransactionHistoryPage: React.FC = () => {
       setIsLoading(true);
 
       try {
-        const config = {
+        const config: AlchemySettings = {
           apiKey: process.env.NEXT_PUBLIC_ALCHEMY_API_KEY,
-          network: Network.POLYGONZKEVM_TESTNET,
+          network: {
+            name: "Polygon zkEVM Amoy",
+            chainId: 1442,
+            nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+            rpcUrls: {
+              default: {
+                http: ["https://polygon-zkevm-amoy.g.alchemy.com/v2"],
+              },
+              public: {
+                http: ["https://polygon-zkevm-amoy.g.alchemy.com/v2"],
+              },
+            },
+            blockExplorers: {
+              default: {
+                name: "Polygon zkEVM Amoy Explorer",
+                url: "https://explorer.public.zkevm-test.net",
+              },
+            },
+            testnet: true,
+          },
         };
         const alchemy = new Alchemy(config);
 
@@ -156,7 +175,7 @@ const TransactionHistoryPage: React.FC = () => {
                     <Td>{new Date(transaction.timestamp).toLocaleString()}</Td>
                     <Td>
                       <ChakraLink
-                        href={`https://amoy.polygonscan.com/tx/${transaction.hash}`}
+                        href={`https://explorer.public.zkevm-test.net/tx/${transaction.hash}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         color="blue.500"
