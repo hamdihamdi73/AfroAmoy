@@ -9,8 +9,7 @@ import {
   Flex,
   Text,
   Box,
-  SimpleGrid,
-  Link as ChakraLink,
+  ChakraLink,
   Button,
   Spinner,
   Table,
@@ -20,16 +19,15 @@ import {
   Th,
   Td,
 } from "@chakra-ui/react";
-import styles from "../styles/TransactionHistory.module.css";
 import { CLAIM_TOKEN_CONTRACT_ADDRESS } from "../const/addresses";
 
 type Transaction = {
   hash: string;
   from: string;
-  to: string | null;
+  to: string;
   value: string;
   asset: string;
-  category: AssetTransfersCategory;
+  category: string;
   timestamp: number;
 };
 
@@ -100,12 +98,16 @@ const TransactionHistoryPage: React.FC = () => {
   const getTransactionType = (category: string, to: string): string => {
     if (address && to.toLowerCase() === address.toLowerCase()) {
       return "Received";
-    } else if (category === "external") {
-      return "Sent";
-    } else if (category === "internal") {
-      return "Internal";
-    } else {
-      return "Token Transfer";
+    }
+    switch (category) {
+      case "external":
+        return "Sent";
+      case "internal":
+        return "Internal";
+      case "erc20":
+        return "Token Transfer";
+      default:
+        return "Unknown";
     }
   };
 
