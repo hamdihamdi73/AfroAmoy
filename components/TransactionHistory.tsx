@@ -156,7 +156,7 @@ const TransactionHistoryPage: React.FC = () => {
                     <Td>{new Date(transaction.timestamp).toLocaleString()}</Td>
                     <Td>
                       <ChakraLink
-                        href={`https://explorer.public.zkevm-test.net/tx/${transaction.hash}`}
+                        href={`https://www.oklink.com/amoy/tx/${transaction.hash}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         color="blue.500"
