@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Alchemy, Network, AssetTransfersCategory } from "alchemy-sdk";
+import { Alchemy, Network } from "alchemy-sdk";
 import {
   useAddress,
   useContract,
@@ -67,29 +67,20 @@ const TransactionHistoryPage: React.FC = () => {
         };
         const alchemy = new Alchemy(config);
 
-        const [fromData, toData] = await Promise.all([
-          alchemy.core.getAssetTransfers({
-            fromBlock: "0x0",
-            fromAddress: address,
-            category: [AssetTransfersCategory.EXTERNAL, AssetTransfersCategory.INTERNAL, AssetTransfersCategory.ERC20],
-          }),
-          alchemy.core.getAssetTransfers({
-            fromBlock: "0x0",
-            toAddress: address,
-            category: [AssetTransfersCategory.EXTERNAL, AssetTransfersCategory.INTERNAL, AssetTransfersCategory.ERC20],
-          })
-        ]);
+        const transfers = await alchemy.core.getAssetTransfers({
+          fromBlock: "0x0",
+          toAddress: address,
+          category: ["external", "internal", "erc20"],
+        });
 
-        const allTransfers = [...fromData.transfers, ...toData.transfers];
-
-        const formattedTransactions: Transaction[] = allTransfers.map((tx) => ({
+        const formattedTransactions: Transaction[] = transfers.transfers.map((tx) => ({
           hash: tx.hash,
           from: tx.from,
-          to: tx.to ?? null,
+          to: tx.to,
           value: tx.value?.toString() || "0",
           asset: tx.asset || "MATIC",
           category: tx.category,
-          timestamp: tx.blockTimestamp ? new Date(tx.blockTimestamp).getTime() : 0,
+          timestamp: tx.metadata.blockTimestamp ? new Date(tx.metadata.blockTimestamp).getTime() : 0,
         }));
 
         // Sort transactions by timestamp in descending order (most recent first)
@@ -106,12 +97,12 @@ const TransactionHistoryPage: React.FC = () => {
     fetchTransactionHistory();
   }, [address]);
 
-  const getTransactionType = (category: AssetTransfersCategory, to: string | null): string => {
-    if (to && address && to.toLowerCase() === address.toLowerCase()) {
+  const getTransactionType = (category: string, to: string): string => {
+    if (address && to.toLowerCase() === address.toLowerCase()) {
       return "Received";
-    } else if (category === AssetTransfersCategory.EXTERNAL) {
+    } else if (category === "external") {
       return "Sent";
-    } else if (category === AssetTransfersCategory.INTERNAL) {
+    } else if (category === "internal") {
       return "Internal";
     } else {
       return "Token Transfer";
