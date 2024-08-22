@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Alchemy, Network, AlchemySettings } from "alchemy-sdk";
+import { Alchemy, Network, AlchemySettings, AssetTransfersCategory } from "alchemy-sdk";
 import {
   useAddress,
   useContract,
@@ -9,7 +9,7 @@ import {
   Flex,
   Text,
   Box,
-  ChakraLink,
+  Link as ChakraLink,
   Button,
   Spinner,
   Table,
@@ -27,7 +27,7 @@ type Transaction = {
   to: string;
   value: string;
   asset: string;
-  category: "external" | "internal" | "erc20" | "erc721" | "erc1155";
+  category: AssetTransfersCategory;
   timestamp: number;
 };
 
