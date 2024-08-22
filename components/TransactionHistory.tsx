@@ -57,7 +57,7 @@ const TransactionHistoryPage: React.FC = () => {
       try {
         const config = {
           apiKey: process.env.NEXT_PUBLIC_ALCHEMY_API_KEY,
-          network: Network.MATIC_AMOY,
+          network: Network.POLYGONZKEVM_TESTNET,
         };
         const alchemy = new Alchemy(config);
 
