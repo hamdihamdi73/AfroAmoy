@@ -61,26 +61,7 @@ const TransactionHistoryPage: React.FC = () => {
       try {
         const config: AlchemySettings = {
           apiKey: process.env.NEXT_PUBLIC_ALCHEMY_API_KEY,
-          network: {
-            name: "Polygon zkEVM Amoy",
-            chainId: 1442,
-            nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
-            rpcUrls: {
-              default: {
-                http: ["https://polygon-zkevm-amoy.g.alchemy.com/v2"],
-              },
-              public: {
-                http: ["https://polygon-zkevm-amoy.g.alchemy.com/v2"],
-              },
-            },
-            blockExplorers: {
-              default: {
-                name: "Polygon zkEVM Amoy Explorer",
-                url: "https://explorer.public.zkevm-test.net",
-              },
-            },
-            testnet: true,
-          },
+          network: Network.MATIC_MUMBAI, // Use Mumbai testnet as it's the closest to Amoy
         };
         const alchemy = new Alchemy(config);
 

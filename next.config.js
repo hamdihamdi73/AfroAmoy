@@ -7,7 +7,7 @@ const nextConfig = {
   },
   env: {
     NEXT_PUBLIC_ALCHEMY_API_KEY: process.env.NEXT_PUBLIC_ALCHEMY_API_KEY,
-    NEXT_PUBLIC_ALCHEMY_RPC_URL: 'https://polygon-zkevm-amoy.g.alchemy.com/v2',
+    NEXT_PUBLIC_ALCHEMY_RPC_URL: 'https://rpc-amoy.polygon.technology',
     THIRDWEB_API_KEY: process.env.THIRDWEB_API_KEY,
     CREST_SMARTWALLET_FACTORY_ADDRESS: process.env.CREST_SMARTWALLET_FACTORY_ADDRESS,
     NEXT_PUBLIC_COVALENT_API_KEY: process.env.NEXT_PUBLIC_COVALENT_API_KEY,
