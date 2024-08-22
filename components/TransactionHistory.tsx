@@ -27,7 +27,7 @@ type Transaction = {
   to: string;
   value: string;
   asset: string;
-  category: string;
+  category: "external" | "internal" | "erc20" | "erc721" | "erc1155";
   timestamp: number;
 };
 
@@ -68,7 +68,7 @@ const TransactionHistoryPage: React.FC = () => {
         const transfers = await alchemy.core.getAssetTransfers({
           fromBlock: "0x0",
           toAddress: address,
-          category: ["external", "internal", "erc20"],
+          category: ["external", "internal", "erc20", "erc721", "erc1155"],
         });
 
         const formattedTransactions: Transaction[] = transfers.transfers.map((tx) => ({
@@ -95,7 +95,7 @@ const TransactionHistoryPage: React.FC = () => {
     fetchTransactionHistory();
   }, [address]);
 
-  const getTransactionType = (category: string, to: string): string => {
+  const getTransactionType = (category: Transaction['category'], to: string): string => {
     if (address && to.toLowerCase() === address.toLowerCase()) {
       return "Received";
     }
@@ -105,9 +105,11 @@ const TransactionHistoryPage: React.FC = () => {
       case "internal":
         return "Internal";
       case "erc20":
-        return "Token Transfer";
-      default:
-        return "Unknown";
+        return "ERC20 Transfer";
+      case "erc721":
+        return "NFT Transfer";
+      case "erc1155":
+        return "ERC1155 Transfer";
     }
   };
 
