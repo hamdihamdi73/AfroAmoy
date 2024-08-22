@@ -59,11 +59,14 @@ const TransactionHistoryPage: React.FC = () => {
       setIsLoading(true);
 
       try {
+        console.log("Fetching transaction history for address:", address);
         const config: AlchemySettings = {
           apiKey: process.env.NEXT_PUBLIC_ALCHEMY_API_KEY,
           network: Network.MATIC_MUMBAI, // Use Mumbai testnet as it's the closest to Amoy
         };
         const alchemy = new Alchemy(config);
+
+        console.log("Alchemy config:", config);
 
         const transfers = await alchemy.core.getAssetTransfers({
           fromBlock: "0x0",
@@ -77,6 +80,8 @@ const TransactionHistoryPage: React.FC = () => {
           ],
         });
 
+        console.log("Fetched transfers:", transfers);
+
         const formattedTransactions: Transaction[] = transfers.transfers.map((tx) => ({
           hash: tx.hash,
           from: tx.from,
@@ -87,10 +92,13 @@ const TransactionHistoryPage: React.FC = () => {
           timestamp: tx.metadata.blockTimestamp ? new Date(tx.metadata.blockTimestamp).getTime() : 0,
         }));
 
+        console.log("Formatted transactions:", formattedTransactions);
+
         // Sort transactions by timestamp in descending order (most recent first)
         const sortedTransactions = formattedTransactions.sort((a, b) => b.timestamp - a.timestamp);
 
         setTransactions(sortedTransactions);
+        console.log("Set transactions:", sortedTransactions);
       } catch (error) {
         console.error("Error fetching transaction history:", error);
       } finally {
@@ -135,9 +143,10 @@ const TransactionHistoryPage: React.FC = () => {
       {isLoading ? (
         <Spinner />
       ) : transactions.length === 0 ? (
-        <Text>No transactions found.</Text>
+        <Text>No transactions found. (Transactions length: {transactions.length})</Text>
       ) : (
         <Box overflowX="auto" width="100%">
+          <Text mb={2}>Found {transactions.length} transactions</Text>
           <Table variant="simple">
             <Thead>
               <Tr>
