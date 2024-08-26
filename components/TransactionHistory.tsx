@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Alchemy, Network as AlchemyNetwork, AssetTransfersCategory } from "alchemy-sdk";
+import { Alchemy, Network as AlchemyNetwork, AssetTransfersCategory, AssetTransfersResult } from "alchemy-sdk";
 import {
   useAddress,
   useContract,
   useContractMetadata,
+  useTokenBalance,
 } from "@thirdweb-dev/react";
 import {
   Heading,
@@ -23,12 +24,12 @@ type Transaction = {
   from: string;
   to: string;
   value: string;
-  asset: string;
+  asset: string | null;
   category: AssetTransfersCategory;
   timestamp: number;
 };
 
-const formatAmount = (value: string, decimals: number = 18) => {
+const formatAmount = (value: string, decimals: number = 18, asset: string | null) => {
   try {
     const parsedValue = BigInt(value);
     const divisor = BigInt(10 ** decimals);
@@ -40,7 +41,11 @@ const formatAmount = (value: string, decimals: number = 18) => {
       formattedAmount += '.' + fractionalPart.toString().padStart(decimals, '0').slice(0, 6);
     }
     
-    return parseFloat(formattedAmount).toLocaleString(undefined, {
+    const numericValue = parseFloat(formattedAmount);
+    if (isNaN(numericValue)) {
+      return "0.00";
+    }
+    return numericValue.toLocaleString(undefined, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 6,
     });
@@ -80,7 +85,7 @@ const TransactionHistoryPage: React.FC = () => {
         };
         const alchemy = new Alchemy(config);
 
-        const transfers = await alchemy.core.getAssetTransfers({
+        const transfers: AssetTransfersResult = await alchemy.core.getAssetTransfers({
           fromBlock: "0x0",
           toAddress: address,
           category: [
@@ -91,16 +96,25 @@ const TransactionHistoryPage: React.FC = () => {
           ],
         });
 
-        const formattedTransactions: Transaction[] = transfers.transfers.map((tx) => ({
-          hash: tx.hash,
-          from: tx.from,
-          to: tx.to || "",
-          value: tx.value?.toString() || "0",
-          asset: tx.asset || "MATIC",
-          category: tx.category,
-          timestamp: tx.metadata?.blockTimestamp 
-            ? Math.floor(new Date(tx.metadata.blockTimestamp).getTime() / 1000)
-            : 0,
+        const tokenBalances = await alchemy.core.getTokenBalances(address);
+
+        const formattedTransactions: Transaction[] = await Promise.all(transfers.transfers.map(async (tx) => {
+          let asset = tx.asset;
+          if (tx.rawContract && tx.rawContract.address) {
+            const tokenMetadata = await alchemy.core.getTokenMetadata(tx.rawContract.address);
+            asset = tokenMetadata.symbol || asset;
+          }
+          return {
+            hash: tx.hash,
+            from: tx.from,
+            to: tx.to || "",
+            value: tx.value?.toString() || "0",
+            asset: asset || "MATIC",
+            category: tx.category,
+            timestamp: tx.metadata?.blockTimestamp 
+              ? Math.floor(new Date(tx.metadata.blockTimestamp).getTime() / 1000)
+              : 0,
+          };
         }));
 
         // Sort transactions by timestamp in descending order (most recent first)
@@ -204,8 +218,8 @@ const TransactionHistoryPage: React.FC = () => {
                     <div>
                       <span className={styles.label}>Amount:</span>{" "}
                       <Text fontSize={["xs", "sm"]} isTruncated>
-                        {formatAmount(transaction.value)}{" "}
-                        <b>{transaction.asset}</b>
+                        {formatAmount(transaction.value, 18, transaction.asset)}{" "}
+                        <b>{transaction.asset || "MATIC"}</b>
                       </Text>
                     </div>
                     <div>
@@ -223,18 +237,20 @@ const TransactionHistoryPage: React.FC = () => {
                     <div>
                       <span className={styles.label}>Date:</span>{" "}
                       <Text fontSize={["xs", "sm"]} isTruncated>
-                        {new Date(transaction.timestamp * 1000).toLocaleString(
-                          "en-US",
-                          {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                            hour: "numeric",
-                            minute: "numeric",
-                            second: "numeric",
-                            hour12: true,
-                          }
-                        )}
+                        {transaction.timestamp === 0
+                          ? "Date not available"
+                          : new Date(transaction.timestamp * 1000).toLocaleString(
+                              "en-US",
+                              {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                                hour: "numeric",
+                                minute: "numeric",
+                                second: "numeric",
+                                hour12: true,
+                              }
+                            )}
                       </Text>
                     </div>
                   </Flex>
