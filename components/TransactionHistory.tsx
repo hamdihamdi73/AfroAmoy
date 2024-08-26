@@ -1,6 +1,10 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import { Alchemy, Network, AlchemySettings, AssetTransfersCategory } from "alchemy-sdk";
-import { useAddress } from "@thirdweb-dev/react";
+import {
+  useAddress,
+  useContract,
+  useContractMetadata,
+} from "@thirdweb-dev/react";
 import {
   Flex,
   Text,
@@ -17,6 +21,7 @@ import {
   Alert,
   AlertIcon,
 } from "@chakra-ui/react";
+import { CLAIM_TOKEN_CONTRACT_ADDRESS } from "../const/addresses";
 
 type Transaction = {
   hash: string;
@@ -154,15 +159,6 @@ const TransactionHistoryPage: React.FC = () => {
     setCurrentPage((prevPage) => Math.max(prevPage - 1, 1));
   };
 
-  const paginatedTransactions = useMemo(() => {
-    return transactions.slice(
-      (currentPage - 1) * transactionsPerPage,
-      currentPage * transactionsPerPage
-    );
-  }, [transactions, currentPage, transactionsPerPage]);
-
-  const totalPages = Math.ceil(transactions.length / transactionsPerPage);
-
   return (
     <Flex direction="column" align="center" p={4} width="100%" height="100%">
       <Text fontSize="2xl" fontWeight="bold" mb={4}>Transaction History</Text>
@@ -192,36 +188,43 @@ const TransactionHistoryPage: React.FC = () => {
               </Tr>
             </Thead>
             <Tbody>
-              {paginatedTransactions.map((transaction) => (
-                <Tr key={transaction.hash}>
-                  <Td>{getTransactionType(transaction.category, transaction.to)}</Td>
-                  <Td>{formatAmount(transaction.value)}</Td>
-                  <Td>{transaction.asset}</Td>
-                  <Td>{transaction.from.slice(0, 6)}...{transaction.from.slice(-4)}</Td>
-                  <Td>{transaction.to ? `${transaction.to.slice(0, 6)}...${transaction.to.slice(-4)}` : 'N/A'}</Td>
-                  <Td>{new Date(transaction.timestamp).toLocaleString()}</Td>
-                  <Td>
-                    <ChakraLink
-                      href={`https://www.oklink.com/amoy/tx/${transaction.hash}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      color="blue.500"
-                    >
-                      View
-                    </ChakraLink>
-                  </Td>
-                </Tr>
-              ))}
+              {transactions
+                .slice(
+                  (currentPage - 1) * transactionsPerPage,
+                  currentPage * transactionsPerPage
+                )
+                .map((transaction) => (
+                  <Tr key={transaction.hash}>
+                    <Td>{getTransactionType(transaction.category, transaction.to)}</Td>
+                    <Td>{formatAmount(transaction.value)}</Td>
+                    <Td>{transaction.asset}</Td>
+                    <Td>{transaction.from.slice(0, 6)}...{transaction.from.slice(-4)}</Td>
+                    <Td>{transaction.to ? `${transaction.to.slice(0, 6)}...${transaction.to.slice(-4)}` : 'N/A'}</Td>
+                    <Td>{new Date(transaction.timestamp).toLocaleString()}</Td>
+                    <Td>
+                      <ChakraLink
+                        href={`https://www.oklink.com/amoy/tx/${transaction.hash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        color="blue.500"
+                      >
+                        View
+                      </ChakraLink>
+                    </Td>
+                  </Tr>
+                ))}
             </Tbody>
           </Table>
           <Flex justify="space-between" mt={4}>
             <Button onClick={handlePrevPage} disabled={currentPage === 1}>
               Previous
             </Button>
-            <Text>Page {currentPage} of {totalPages}</Text>
+            <Text>Page {currentPage} of {Math.ceil(transactions.length / transactionsPerPage)}</Text>
             <Button
               onClick={handleNextPage}
-              disabled={currentPage === totalPages}
+              disabled={
+                transactions.length <= currentPage * transactionsPerPage
+              }
             >
               Next
             </Button>
