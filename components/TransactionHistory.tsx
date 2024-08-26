@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { Alchemy, Network as AlchemyNetwork, AlchemySettings, AssetTransfersCategory } from "alchemy-sdk";
 import {
   useAddress,
@@ -54,6 +54,47 @@ const formatAmount = (value: string, decimals: number = 18) => {
     return "N/A";
   }
 };
+
+const TransactionRow: React.FC<{ transaction: Transaction; address: string | undefined }> = React.memo(({ transaction, address }) => {
+  const getTransactionType = useCallback((category: Transaction['category'], to: string): string => {
+    if (address && to.toLowerCase() === address.toLowerCase()) {
+      return "Received";
+    }
+    switch (category) {
+      case AssetTransfersCategory.EXTERNAL:
+        return "Sent";
+      case AssetTransfersCategory.ERC20:
+        return "ERC20 Transfer";
+      case AssetTransfersCategory.ERC721:
+        return "NFT Transfer";
+      case AssetTransfersCategory.ERC1155:
+        return "ERC1155 Transfer";
+      default:
+        return "Unknown";
+    }
+  }, [address]);
+
+  return (
+    <Tr key={transaction.hash}>
+      <Td>{getTransactionType(transaction.category, transaction.to)}</Td>
+      <Td>{formatAmount(transaction.value)}</Td>
+      <Td>{transaction.asset}</Td>
+      <Td>{transaction.from.slice(0, 6)}...{transaction.from.slice(-4)}</Td>
+      <Td>{transaction.to ? `${transaction.to.slice(0, 6)}...${transaction.to.slice(-4)}` : 'N/A'}</Td>
+      <Td>{new Date(transaction.timestamp).toLocaleString()}</Td>
+      <Td>
+        <ChakraLink
+          href={`https://www.oklink.com/amoy/tx/${transaction.hash}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          color="blue.500"
+        >
+          View
+        </ChakraLink>
+      </Td>
+    </Tr>
+  );
+});
 
 const TransactionHistoryPage: React.FC = () => {
   const { contract } = useContract(CLAIM_TOKEN_CONTRACT_ADDRESS, "token-drop");
@@ -147,31 +188,21 @@ const TransactionHistoryPage: React.FC = () => {
     fetchTransactionHistory();
   }, [address]);
 
-  const getTransactionType = (category: Transaction['category'], to: string): string => {
-    if (address && to.toLowerCase() === address.toLowerCase()) {
-      return "Received";
-    }
-    switch (category) {
-      case AssetTransfersCategory.EXTERNAL:
-        return "Sent";
-      case AssetTransfersCategory.ERC20:
-        return "ERC20 Transfer";
-      case AssetTransfersCategory.ERC721:
-        return "NFT Transfer";
-      case AssetTransfersCategory.ERC1155:
-        return "ERC1155 Transfer";
-      default:
-        return "Unknown";
-    }
-  };
-
-  const handleNextPage = () => {
+  const handleNextPage = useCallback(() => {
     setCurrentPage((prevPage) => prevPage + 1);
-  };
+  }, []);
 
-  const handlePrevPage = () => {
+  const handlePrevPage = useCallback(() => {
     setCurrentPage((prevPage) => Math.max(prevPage - 1, 1));
-  };
+  }, []);
+
+  const paginatedTransactions = useMemo(() => {
+    const startIndex = (currentPage - 1) * transactionsPerPage;
+    const endIndex = startIndex + transactionsPerPage;
+    return transactions.slice(startIndex, endIndex);
+  }, [transactions, currentPage, transactionsPerPage]);
+
+  const totalPages = useMemo(() => Math.ceil(transactions.length / transactionsPerPage), [transactions.length, transactionsPerPage]);
 
   return (
     <Flex direction="column" align="center" p={4} width="100%" height="100%">
@@ -202,38 +233,16 @@ const TransactionHistoryPage: React.FC = () => {
               </Tr>
             </Thead>
             <Tbody>
-              {transactions
-                .slice(
-                  (currentPage - 1) * transactionsPerPage,
-                  currentPage * transactionsPerPage
-                )
-                .map((transaction) => (
-                  <Tr key={transaction.hash}>
-                    <Td>{getTransactionType(transaction.category, transaction.to)}</Td>
-                    <Td>{formatAmount(transaction.value)}</Td>
-                    <Td>{transaction.asset}</Td>
-                    <Td>{transaction.from.slice(0, 6)}...{transaction.from.slice(-4)}</Td>
-                    <Td>{transaction.to ? `${transaction.to.slice(0, 6)}...${transaction.to.slice(-4)}` : 'N/A'}</Td>
-                    <Td>{new Date(transaction.timestamp).toLocaleString()}</Td>
-                    <Td>
-                      <ChakraLink
-                        href={`https://www.oklink.com/amoy/tx/${transaction.hash}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        color="blue.500"
-                      >
-                        View
-                      </ChakraLink>
-                    </Td>
-                  </Tr>
-                ))}
+              {paginatedTransactions.map((transaction) => (
+                <TransactionRow key={transaction.hash} transaction={transaction} address={address} />
+              ))}
             </Tbody>
           </Table>
           <Flex justify="space-between" mt={4}>
             <Button onClick={handlePrevPage} disabled={currentPage === 1}>
               Previous
             </Button>
-            <Text>Page {currentPage} of {Math.ceil(transactions.length / transactionsPerPage)}</Text>
+            <Text>Page {currentPage} of {totalPages}</Text>
             <Button
               onClick={handleNextPage}
               disabled={
