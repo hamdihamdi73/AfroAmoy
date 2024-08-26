@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Alchemy, Network, AlchemySettings, AssetTransfersCategory } from "alchemy-sdk";
+import { Alchemy, Network as AlchemyNetwork, AlchemySettings, AssetTransfersCategory } from "alchemy-sdk";
 import {
   useAddress,
   useContract,
@@ -88,7 +88,7 @@ const TransactionHistoryPage: React.FC = () => {
 
         const config: AlchemySettings = {
           apiKey: process.env.NEXT_PUBLIC_ALCHEMY_API_KEY,
-          network: Network.MATIC_MUMBAI,
+          network: AlchemyNetwork.MATIC_AMOY,
         };
         const alchemy = new Alchemy(config);
 
