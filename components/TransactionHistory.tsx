@@ -108,9 +108,9 @@ const TransactionHistoryPage: React.FC = () => {
           ],
         });
 
-        console.log("Fetched transfers:", transfers);
+        console.log("Fetched transfers:", JSON.stringify(transfers, null, 2));
 
-        console.log("Raw transfers data:", transfers);
+        console.log("Raw transfers data:", JSON.stringify(transfers, null, 2));
 
         const formattedTransactions: Transaction[] = transfers.transfers.map((tx) => ({
           hash: tx.hash,
@@ -119,7 +119,7 @@ const TransactionHistoryPage: React.FC = () => {
           value: tx.value?.toString() || "0",
           asset: tx.asset || "MATIC",
           category: tx.category,
-          timestamp: tx.metadata.blockTimestamp ? new Date(tx.metadata.blockTimestamp).getTime() : 0,
+          timestamp: tx.metadata?.blockTimestamp ? new Date(tx.metadata.blockTimestamp).getTime() : 0,
         }));
 
         console.log("Formatted transactions:", formattedTransactions);
@@ -137,7 +137,8 @@ const TransactionHistoryPage: React.FC = () => {
         } else if (typeof error === 'object' && error !== null) {
           errorMessage = JSON.stringify(error);
         }
-        setError(`Failed to fetch transaction history: ${errorMessage}`);
+        console.error("Detailed error:", error);
+        setError(`Failed to fetch transaction history: ${errorMessage}. Please check the console for more details.`);
       } finally {
         setIsLoading(false);
       }
