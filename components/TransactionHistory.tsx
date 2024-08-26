@@ -76,7 +76,7 @@ const TransactionHistoryPage: React.FC = () => {
       try {
         const config = {
           apiKey: process.env.NEXT_PUBLIC_ALCHEMY_API_KEY,
-          network: AlchemyNetwork.ARBITRUM_GOERLI,
+          network: AlchemyNetwork.MATIC_AMOY,
         };
         const alchemy = new Alchemy(config);
 
@@ -192,7 +192,7 @@ const TransactionHistoryPage: React.FC = () => {
                       <ChakraLink
                         fontSize={["xs", "sm"]}
                         isTruncated
-                        href={`https://goerli.arbiscan.io/tx/${transaction.hash}`}
+                        href={`https://www.oklink.com/amoy/tx/${transaction.hash}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         color="blue.500"
