@@ -43,11 +43,11 @@ const formatAmount = (value: string, decimals: number = 18, asset: string | null
     
     const numericValue = parseFloat(formattedAmount);
     if (isNaN(numericValue)) {
-      return "0.00";
+      return "0";
     }
     return numericValue.toLocaleString(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 6,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     });
   } catch (error) {
     console.error("Error formatting amount:", error);
@@ -223,15 +223,17 @@ const TransactionHistoryPage: React.FC = () => {
                       </Text>
                     </div>
                     <div>
-                      <span className={styles.label}>To UID:</span>{" "}
+                      <span className={styles.label}>To:</span>{" "}
                       <Text fontSize={["xs", "sm"]} isTruncated>
                         {transaction.to}
                       </Text>
                     </div>
                     <div>
-                      <span className={styles.label}>From UID:</span>{" "}
+                      <span className={styles.label}>From:</span>{" "}
                       <Text fontSize={["xs", "sm"]} isTruncated>
-                        {transaction.from}
+                        {transaction.from === "0x0000000000000000000000000000000000000000"
+                          ? "Contract Creation"
+                          : transaction.from}
                       </Text>
                     </div>
                     <div>
