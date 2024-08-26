@@ -17,7 +17,7 @@ import {
   Spinner,
 } from "@chakra-ui/react";
 import styles from "../styles/TransactionHistory.module.css";
-import { CLAIM_TOKEN_CONTRACT_ADDRESS, TRANSFER_CONTRACT_ADDRESS } from "../const/addresses";
+import { CLAIM_TOKEN_CONTRACT_ADDRESS, TRANSFER_CONTRACT_ADDRESS, FEE_TOKEN_ADDRESS, CFA_TOKEN_CONTRACT_ADDRESS, USDA_TOKEN_CONTRACT_ADDRESS } from "../const/addresses";
 
 type Transaction = {
   hash: string;
@@ -90,16 +90,26 @@ const TransactionHistoryPage: React.FC = () => {
           let decimals = 18; // Default to 18 decimals for MATIC
           
           if (tx.rawContract && tx.rawContract.address) {
-            if (tx.rawContract.address.toLowerCase() === CLAIM_TOKEN_CONTRACT_ADDRESS.toLowerCase()) {
-              // This is the drop token
-              const tokenMetadata = await alchemy.core.getTokenMetadata(CLAIM_TOKEN_CONTRACT_ADDRESS);
-              asset = tokenMetadata.symbol || "DROP";
-              decimals = tokenMetadata.decimals || 18;
+            const tokenAddress = tx.rawContract.address.toLowerCase();
+            if (tokenAddress === CLAIM_TOKEN_CONTRACT_ADDRESS.toLowerCase()) {
+              asset = "EURA";
+              decimals = 18;
+            } else if (tokenAddress === FEE_TOKEN_ADDRESS.toLowerCase()) {
+              asset = "mamaDo";
+              decimals = 18;
+            } else if (tokenAddress === CFA_TOKEN_CONTRACT_ADDRESS.toLowerCase()) {
+              asset = "CFA";
+              decimals = 18;
+            } else if (tokenAddress === USDA_TOKEN_CONTRACT_ADDRESS.toLowerCase()) {
+              asset = "USDA";
+              decimals = 18;
             } else {
-              const tokenMetadata = await alchemy.core.getTokenMetadata(tx.rawContract.address);
+              const tokenMetadata = await alchemy.core.getTokenMetadata(tokenAddress);
               asset = tokenMetadata.symbol || asset;
               decimals = tokenMetadata.decimals || 18;
             }
+          } else if (!asset) {
+            asset = "MATIC";
           }
           
           return {
