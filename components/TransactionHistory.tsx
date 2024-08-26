@@ -72,6 +72,11 @@ const TransactionHistoryPage: React.FC = () => {
         return;
       }
 
+      if (!process.env.NEXT_PUBLIC_ALCHEMY_API_KEY) {
+        setError("Alchemy API key is not set. Please check your environment variables.");
+        return;
+      }
+
       setIsLoading(true);
       setError(null);
 
@@ -79,11 +84,7 @@ const TransactionHistoryPage: React.FC = () => {
         console.log("Fetching transaction history for address:", address);
         const config: AlchemySettings = {
           apiKey: process.env.NEXT_PUBLIC_ALCHEMY_API_KEY,
-          network: Network.MATIC_MAINNET, // Use MATIC_MAINNET as Amoy is not directly supported
-          customNetwork: {
-            rpcUrl: "https://rpc-amoy.polygon.technology",
-            chainId: 80002,
-          },
+          network: Network.MATIC_MUMBAI,
         };
         const alchemy = new Alchemy(config);
 
@@ -122,7 +123,7 @@ const TransactionHistoryPage: React.FC = () => {
         console.log("Set transactions:", sortedTransactions);
       } catch (error) {
         console.error("Error fetching transaction history:", error);
-        setError("Failed to fetch transaction history. Please try again later.");
+        setError(`Failed to fetch transaction history: ${error.message}`);
       } finally {
         setIsLoading(false);
       }
@@ -171,7 +172,7 @@ const TransactionHistoryPage: React.FC = () => {
       {isLoading ? (
         <Spinner size="xl" />
       ) : transactions.length === 0 ? (
-        <Text>No transactions found. (Transactions length: {transactions.length})</Text>
+        <Text>No transactions found. This could be due to no transactions or an issue with fetching the data.</Text>
       ) : (
         <Box overflowX="auto" width="100%">
           <Text mb={2}>Found {transactions.length} transactions</Text>
