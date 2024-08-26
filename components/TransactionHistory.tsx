@@ -41,16 +41,16 @@ const formatAmount = (value: string, decimals: number) => {
     
     if (fractionalPart > 0) {
       const fractionalString = fractionalPart.toString().padStart(decimals, '0');
-      formattedValue += '.' + fractionalString;
+      const significantDecimals = fractionalString.replace(/0+$/, '');
+      if (significantDecimals.length > 0) {
+        formattedValue += '.' + significantDecimals;
+      }
     }
-    
-    // Remove trailing zeros after the decimal point
-    formattedValue = formattedValue.replace(/\.?0+$/, '');
     
     // Add commas for thousands separators
     formattedValue = formattedValue.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     
-    return formattedValue === '0' && parsedValue > 0 ? '0.000001' : formattedValue;
+    return formattedValue === '0' && parsedValue > 0 ? '< 0.000001' : formattedValue;
   } catch (error) {
     console.error("Error formatting amount:", error);
     return "0";
