@@ -102,7 +102,6 @@ const TransactionHistoryPage: React.FC = () => {
           toAddress: address,
           category: [
             AssetTransfersCategory.EXTERNAL,
-            AssetTransfersCategory.INTERNAL,
             AssetTransfersCategory.ERC20,
             AssetTransfersCategory.ERC721,
             AssetTransfersCategory.ERC1155
@@ -154,8 +153,6 @@ const TransactionHistoryPage: React.FC = () => {
     switch (category) {
       case AssetTransfersCategory.EXTERNAL:
         return "Sent";
-      case AssetTransfersCategory.INTERNAL:
-        return "Internal";
       case AssetTransfersCategory.ERC20:
         return "ERC20 Transfer";
       case AssetTransfersCategory.ERC721:
