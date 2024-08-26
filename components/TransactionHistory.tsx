@@ -17,7 +17,7 @@ import {
   Spinner,
 } from "@chakra-ui/react";
 import styles from "../styles/TransactionHistory.module.css";
-import { CLAIM_TOKEN_CONTRACT_ADDRESS } from "../const/addresses";
+import { CLAIM_TOKEN_CONTRACT_ADDRESS, TRANSFER_CONTRACT_ADDRESS } from "../const/addresses";
 
 type Transaction = {
   hash: string;
@@ -27,9 +27,10 @@ type Transaction = {
   asset: string | null;
   category: AssetTransfersCategory;
   timestamp: number;
+  decimals: number;
 };
 
-const formatAmount = (value: string, decimals: number = 18, asset: string | null) => {
+const formatAmount = (value: string, decimals: number, asset: string | null) => {
   try {
     const parsedValue = BigInt(value);
     const divisor = BigInt(10 ** decimals);
@@ -101,11 +102,20 @@ const TransactionHistoryPage: React.FC = () => {
         const formattedTransactions: Transaction[] = await Promise.all(transfers.transfers.map(async (tx) => {
           let asset = tx.asset;
           let decimals = 18; // Default to 18 decimals for MATIC
+          
           if (tx.rawContract && tx.rawContract.address) {
-            const tokenMetadata = await alchemy.core.getTokenMetadata(tx.rawContract.address);
-            asset = tokenMetadata.symbol || asset;
-            decimals = tokenMetadata.decimals || 18;
+            if (tx.rawContract.address.toLowerCase() === CLAIM_TOKEN_CONTRACT_ADDRESS.toLowerCase()) {
+              // This is the drop token
+              const tokenMetadata = await alchemy.core.getTokenMetadata(CLAIM_TOKEN_CONTRACT_ADDRESS);
+              asset = tokenMetadata.symbol || "DROP";
+              decimals = tokenMetadata.decimals || 18;
+            } else {
+              const tokenMetadata = await alchemy.core.getTokenMetadata(tx.rawContract.address);
+              asset = tokenMetadata.symbol || asset;
+              decimals = tokenMetadata.decimals || 18;
+            }
           }
+          
           return {
             hash: tx.hash,
             from: tx.from,
@@ -222,7 +232,7 @@ const TransactionHistoryPage: React.FC = () => {
                       <span className={styles.label}>Amount:</span>{" "}
                       <Text fontSize={["xs", "sm"]} isTruncated>
                         {formatAmount(transaction.value, transaction.decimals, transaction.asset)}{" "}
-                        <b>{transaction.asset || "MATIC"}</b>
+                        <b>{transaction.asset}</b>
                       </Text>
                     </div>
                     <div>
