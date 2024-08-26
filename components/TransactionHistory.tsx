@@ -41,13 +41,13 @@ const formatAmount = (value: string, decimals: number) => {
     
     if (fractionalPart > 0) {
       const fractionalString = fractionalPart.toString().padStart(decimals, '0');
-      const significantDecimals = fractionalString.replace(/0+$/, '').slice(0, 4);
+      const significantDecimals = fractionalString.replace(/0+$/, '').slice(0, 2);
       if (significantDecimals.length > 0) {
         formattedValue += '.' + significantDecimals;
       }
     }
     
-    return formattedValue === '0' && parsedValue > 0 ? '0.0001' : formattedValue;
+    return formattedValue === '0' && parsedValue > 0 ? '0.01' : formattedValue;
   } catch (error) {
     console.error("Error formatting amount:", error);
     return "0";
