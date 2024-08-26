@@ -1,26 +1,21 @@
-import React, { useEffect, useState, useMemo, useCallback } from "react";
-import { Alchemy, Network as AlchemyNetwork, AlchemySettings, AssetTransfersCategory } from "alchemy-sdk";
+import React, { useEffect, useState } from "react";
+import { Alchemy, Network as AlchemyNetwork, AssetTransfersCategory } from "alchemy-sdk";
 import {
   useAddress,
   useContract,
   useContractMetadata,
 } from "@thirdweb-dev/react";
 import {
+  Heading,
   Flex,
   Text,
   Box,
+  SimpleGrid,
   Link as ChakraLink,
   Button,
   Spinner,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  Alert,
-  AlertIcon,
 } from "@chakra-ui/react";
+import styles from "../styles/TransactionHistory.module.css";
 import { CLAIM_TOKEN_CONTRACT_ADDRESS } from "../const/addresses";
 
 type Transaction = {
@@ -55,8 +50,74 @@ const formatAmount = (value: string, decimals: number = 18) => {
   }
 };
 
-const TransactionRow: React.FC<{ transaction: Transaction; address: string | undefined }> = React.memo(({ transaction, address }) => {
-  const getTransactionType = useCallback((category: Transaction['category'], to: string): string => {
+const TransactionHistoryPage: React.FC = () => {
+  const { contract } = useContract(CLAIM_TOKEN_CONTRACT_ADDRESS, "token-drop");
+  const { data: contractMetadata } = useContractMetadata(contract);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const transactionsPerPage = 5;
+  const address = useAddress();
+
+  useEffect(() => {
+    const fetchTransactionHistory = async () => {
+      if (!address) {
+        console.error("Wallet address is undefined.");
+        return;
+      }
+
+      if (!process.env.NEXT_PUBLIC_ALCHEMY_API_KEY) {
+        console.error("Alchemy API key is not set.");
+        return;
+      }
+
+      setIsLoading(true);
+
+      try {
+        const config = {
+          apiKey: process.env.NEXT_PUBLIC_ALCHEMY_API_KEY,
+          network: AlchemyNetwork.MATIC_MUMBAI,
+        };
+        const alchemy = new Alchemy(config);
+
+        const transfers = await alchemy.core.getAssetTransfers({
+          fromBlock: "0x0",
+          toAddress: address,
+          category: [
+            AssetTransfersCategory.EXTERNAL,
+            AssetTransfersCategory.ERC20,
+            AssetTransfersCategory.ERC721,
+            AssetTransfersCategory.ERC1155
+          ],
+        });
+
+        const formattedTransactions: Transaction[] = transfers.transfers.map((tx) => ({
+          hash: tx.hash,
+          from: tx.from,
+          to: tx.to || "",
+          value: tx.value?.toString() || "0",
+          asset: tx.asset || "MATIC",
+          category: tx.category,
+          timestamp: tx.metadata?.blockTimestamp 
+            ? Math.floor(new Date(tx.metadata.blockTimestamp).getTime() / 1000)
+            : 0,
+        }));
+
+        // Sort transactions by timestamp in descending order (most recent first)
+        const sortedTransactions = formattedTransactions.sort((a, b) => b.timestamp - a.timestamp);
+
+        setTransactions(sortedTransactions);
+      } catch (error) {
+        console.error("Error fetching transaction history:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTransactionHistory();
+  }, [address]);
+
+  const getTransactionType = (category: AssetTransfersCategory, to: string): string => {
     if (address && to.toLowerCase() === address.toLowerCase()) {
       return "Received";
     }
@@ -72,184 +133,118 @@ const TransactionRow: React.FC<{ transaction: Transaction; address: string | und
       default:
         return "Unknown";
     }
-  }, [address]);
+  };
 
-  const formatDate = (timestamp: number) => {
-    if (timestamp === 0) return 'N/A';
-    return new Date(timestamp * 1000).toLocaleString(); // Multiply by 1000 to convert seconds to milliseconds
+  const handleNextPage = () => {
+    setCurrentPage((prevPage) => prevPage + 1);
+  };
+
+  const handlePrevPage = () => {
+    setCurrentPage((prevPage) => Math.max(prevPage - 1, 1));
   };
 
   return (
-    <Tr key={transaction.hash}>
-      <Td>{getTransactionType(transaction.category, transaction.to)}</Td>
-      <Td>{formatAmount(transaction.value)}</Td>
-      <Td>{transaction.asset}</Td>
-      <Td>{transaction.from.slice(0, 6)}...{transaction.from.slice(-4)}</Td>
-      <Td>{transaction.to ? `${transaction.to.slice(0, 6)}...${transaction.to.slice(-4)}` : 'N/A'}</Td>
-      <Td>{formatDate(transaction.timestamp)}</Td>
-      <Td>
-        <ChakraLink
-          href={`https://www.oklink.com/amoy/tx/${transaction.hash}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          color="blue.500"
-        >
-          View
-        </ChakraLink>
-      </Td>
-    </Tr>
-  );
-});
-
-const TransactionHistoryPage: React.FC = () => {
-  const { contract } = useContract(CLAIM_TOKEN_CONTRACT_ADDRESS, "token-drop");
-  const { data: contractMetadata } = useContractMetadata(contract);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const transactionsPerPage = 10;
-  const address = useAddress();
-
-  useEffect(() => {
-    const fetchTransactionHistory = async () => {
-      if (!address) {
-        setError("Wallet address is undefined. Please connect your wallet.");
-        return;
-      }
-
-      if (!process.env.NEXT_PUBLIC_ALCHEMY_API_KEY) {
-        setError("Alchemy API key is not set. Please check your environment variables.");
-        return;
-      }
-
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        console.log("Fetching transaction history for address:", address);
-        if (!process.env.NEXT_PUBLIC_ALCHEMY_API_KEY) {
-          throw new Error("Alchemy API key is not set");
-        }
-
-        const config: AlchemySettings = {
-          apiKey: process.env.NEXT_PUBLIC_ALCHEMY_API_KEY,
-          network: AlchemyNetwork.MATIC_AMOY,
-        };
-        const alchemy = new Alchemy(config);
-
-        console.log("Alchemy config:", {
-          ...config,
-          apiKey: config.apiKey ? "Set" : "Not set"
-        });
-
-        const transfers = await alchemy.core.getAssetTransfers({
-          fromBlock: "0x0",
-          toAddress: address,
-          category: [
-            AssetTransfersCategory.EXTERNAL,
-            AssetTransfersCategory.ERC20,
-            AssetTransfersCategory.ERC721,
-            AssetTransfersCategory.ERC1155
-          ],
-        });
-
-        console.log("Fetched transfers:", JSON.stringify(transfers, null, 2));
-
-        console.log("Raw transfers data:", JSON.stringify(transfers, null, 2));
-
-        const formattedTransactions: Transaction[] = transfers.transfers.map((tx) => ({
-          hash: tx.hash,
-          from: tx.from,
-          to: tx.to,
-          value: tx.value?.toString() || "0",
-          asset: tx.asset || "MATIC",
-          category: tx.category,
-          timestamp: tx.metadata?.blockTimestamp 
-            ? Math.floor(new Date(tx.metadata.blockTimestamp).getTime() / 1000)
-            : 0,
-        }));
-
-        console.log("Formatted transactions:", formattedTransactions);
-
-        // Sort transactions by timestamp in descending order (most recent first)
-        const sortedTransactions = formattedTransactions.sort((a, b) => b.timestamp - a.timestamp);
-
-        setTransactions(sortedTransactions);
-        console.log("Set transactions:", sortedTransactions);
-      } catch (error) {
-        console.error("Error fetching transaction history:", error);
-        let errorMessage = "An unknown error occurred";
-        if (error instanceof Error) {
-          errorMessage = error.message;
-        } else if (typeof error === 'object' && error !== null) {
-          errorMessage = JSON.stringify(error);
-        }
-        console.error("Detailed error:", error);
-        setError(`Failed to fetch transaction history: ${errorMessage}. Please check the console for more details.`);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchTransactionHistory();
-  }, [address]);
-
-  const handleNextPage = useCallback(() => {
-    setCurrentPage((prevPage) => prevPage + 1);
-  }, []);
-
-  const handlePrevPage = useCallback(() => {
-    setCurrentPage((prevPage) => Math.max(prevPage - 1, 1));
-  }, []);
-
-  const paginatedTransactions = useMemo(() => {
-    const startIndex = (currentPage - 1) * transactionsPerPage;
-    const endIndex = startIndex + transactionsPerPage;
-    return transactions.slice(startIndex, endIndex);
-  }, [transactions, currentPage, transactionsPerPage]);
-
-  const totalPages = useMemo(() => Math.ceil(transactions.length / transactionsPerPage), [transactions.length, transactionsPerPage]);
-
-  return (
     <Flex direction="column" align="center" p={4} width="100%" height="100%">
-      <Text fontSize="2xl" fontWeight="bold" mb={4}>Transaction History</Text>
-      {error && (
-        <Alert status="error" mb={4}>
-          <AlertIcon />
-          {error}
-        </Alert>
-      )}
+      <Heading mb={4}>Transaction History</Heading>
       {isLoading ? (
         <Spinner size="xl" />
       ) : transactions.length === 0 ? (
-        <Text>No transactions found. This could be due to no transactions or an issue with fetching the data.</Text>
+        <Text>No transactions found.</Text>
       ) : (
         <Box overflowX="auto" width="100%">
-          <Text mb={2}>Found {transactions.length} transactions</Text>
-          <Table variant="simple">
-            <Thead>
-              <Tr>
-                <Th>Type</Th>
-                <Th>Amount</Th>
-                <Th>Asset</Th>
-                <Th>From</Th>
-                <Th>To</Th>
-                <Th>Date</Th>
-                <Th>Details</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {paginatedTransactions.map((transaction) => (
-                <TransactionRow key={transaction.hash} transaction={transaction} address={address} />
+          <SimpleGrid columns={[1]} spacing={4}>
+            {transactions
+              .slice(
+                (currentPage - 1) * transactionsPerPage,
+                currentPage * transactionsPerPage
+              )
+              .map((transaction) => (
+                <Box
+                  key={transaction.hash}
+                  className={styles.transactionItem}
+                >
+                  <Flex
+                    className={styles.indicatorContainer}
+                    align="center"
+                    mb={2}
+                  >
+                    <span
+                      className={`${styles.indicator} ${
+                        styles[
+                          getTransactionType(
+                            transaction.category,
+                            transaction.to
+                          )
+                        ]
+                      }`}
+                    />
+                    <Text ml={2} fontSize={["xs", "sm"]} whiteSpace="nowrap">
+                      {getTransactionType(
+                        transaction.category,
+                        transaction.to
+                      )}
+                    </Text>
+                  </Flex>
+                  <Flex direction="column" alignItems="left" textAlign="left">
+                    <div>
+                      <span className={styles.label}>Transaction ID:</span>
+                      <br />
+                      <ChakraLink
+                        fontSize={["xs", "sm"]}
+                        isTruncated
+                        href={`https://mumbai.polygonscan.com/tx/${transaction.hash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        color="blue.500"
+                        textDecoration="underline"
+                      >
+                        Show Transaction Details
+                      </ChakraLink>
+                    </div>
+                    <div>
+                      <span className={styles.label}>Amount:</span>{" "}
+                      <Text fontSize={["xs", "sm"]} isTruncated>
+                        {formatAmount(transaction.value)}{" "}
+                        <b>{transaction.asset}</b>
+                      </Text>
+                    </div>
+                    <div>
+                      <span className={styles.label}>To UID:</span>{" "}
+                      <Text fontSize={["xs", "sm"]} isTruncated>
+                        {transaction.to}
+                      </Text>
+                    </div>
+                    <div>
+                      <span className={styles.label}>From UID:</span>{" "}
+                      <Text fontSize={["xs", "sm"]} isTruncated>
+                        {transaction.from}
+                      </Text>
+                    </div>
+                    <div>
+                      <span className={styles.label}>Date:</span>{" "}
+                      <Text fontSize={["xs", "sm"]} isTruncated>
+                        {new Date(transaction.timestamp * 1000).toLocaleString(
+                          "en-US",
+                          {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                            hour: "numeric",
+                            minute: "numeric",
+                            second: "numeric",
+                            hour12: true,
+                          }
+                        )}
+                      </Text>
+                    </div>
+                  </Flex>
+                </Box>
               ))}
-            </Tbody>
-          </Table>
+          </SimpleGrid>
           <Flex justify="space-between" mt={4}>
             <Button onClick={handlePrevPage} disabled={currentPage === 1}>
               Previous
             </Button>
-            <Text>Page {currentPage} of {totalPages}</Text>
             <Button
               onClick={handleNextPage}
               disabled={
