@@ -112,6 +112,10 @@ const TransactionHistoryPage: React.FC = () => {
             asset = "MATIC";
           }
           
+          // Fetch the block information to get the timestamp
+          const block = await alchemy.core.getBlock(tx.blockNum);
+          const timestamp = block ? block.timestamp : 0;
+          
           return {
             hash: tx.hash,
             from: tx.from,
@@ -119,9 +123,7 @@ const TransactionHistoryPage: React.FC = () => {
             value: tx.value?.toString() || "0",
             asset: asset || "MATIC",
             category: tx.category,
-            timestamp: tx.metadata?.blockTimestamp 
-              ? Math.floor(new Date(tx.metadata.blockTimestamp).getTime() / 1000)
-              : 0,
+            timestamp: timestamp,
             decimals: decimals,
           };
         }));
@@ -248,9 +250,8 @@ const TransactionHistoryPage: React.FC = () => {
                     <div>
                       <span className={styles.label}>Date:</span>{" "}
                       <Text fontSize={["xs", "sm"]} isTruncated>
-                        {transaction.timestamp === 0
-                          ? "Date not available"
-                          : new Date(transaction.timestamp * 1000).toLocaleString(
+                        {transaction.timestamp
+                          ? new Date(transaction.timestamp * 1000).toLocaleString(
                               "en-US",
                               {
                                 month: "short",
@@ -261,7 +262,8 @@ const TransactionHistoryPage: React.FC = () => {
                                 second: "numeric",
                                 hour12: true,
                               }
-                            )}
+                            )
+                          : "Date not available"}
                       </Text>
                     </div>
                   </Flex>
