@@ -35,7 +35,19 @@ const formatAmount = (value: string, decimals: number) => {
     const parsedValue = BigInt(value);
     const divisor = BigInt(10 ** decimals);
     const wholePart = parsedValue / divisor;
-    return wholePart.toString();
+    const fractionalPart = parsedValue % divisor;
+    
+    let formattedValue = wholePart.toString();
+    
+    if (fractionalPart > 0) {
+      const fractionalString = fractionalPart.toString().padStart(decimals, '0');
+      const significantDecimals = fractionalString.replace(/0+$/, '').slice(0, 4);
+      if (significantDecimals.length > 0) {
+        formattedValue += '.' + significantDecimals;
+      }
+    }
+    
+    return formattedValue === '0' && parsedValue > 0 ? '0.0001' : formattedValue;
   } catch (error) {
     console.error("Error formatting amount:", error);
     return "0";
@@ -114,7 +126,7 @@ const TransactionHistoryPage: React.FC = () => {
           
           // Fetch the block information to get the timestamp
           const block = await alchemy.core.getBlock(tx.blockNum);
-          const timestamp = block ? block.timestamp : 0;
+          const timestamp = block ? Number(block.timestamp) : 0;
           
           return {
             hash: tx.hash,
@@ -257,9 +269,9 @@ const TransactionHistoryPage: React.FC = () => {
                                 month: "short",
                                 day: "numeric",
                                 year: "numeric",
-                                hour: "numeric",
-                                minute: "numeric",
-                                second: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                second: "2-digit",
                                 hour12: true,
                               }
                             )
