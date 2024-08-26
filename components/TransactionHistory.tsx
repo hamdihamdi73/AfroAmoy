@@ -29,30 +29,21 @@ type Transaction = {
   timestamp: number;
 };
 
-const formatAmount = (value: string, decimals: number = 18, asset: string | null) => {
-  try {
-    const parsedValue = BigInt(value);
-    const divisor = BigInt(10 ** decimals);
-    const wholePart = parsedValue / divisor;
-    const fractionalPart = parsedValue % divisor;
-    
-    let formattedAmount = wholePart.toString();
-    if (fractionalPart > 0) {
-      formattedAmount += '.' + fractionalPart.toString().padStart(decimals, '0').slice(0, 6);
-    }
-    
-    const numericValue = parseFloat(formattedAmount);
-    if (isNaN(numericValue)) {
-      return "0.00";
-    }
-    return numericValue.toLocaleString(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 6,
-    });
-  } catch (error) {
-    console.error("Error formatting amount:", error);
-    return "N/A";
+const formatAmount = (value: string, decimals: number = 18) => {
+  const parsedValue = BigInt(value);
+  const divisor = BigInt(10 ** decimals);
+  const wholePart = parsedValue / divisor;
+  const fractionalPart = parsedValue % divisor;
+  
+  let formattedAmount = wholePart.toString();
+  if (fractionalPart > 0) {
+    formattedAmount += '.' + fractionalPart.toString().padStart(decimals, '0').slice(0, 6);
   }
+  
+  return parseFloat(formattedAmount).toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 6,
+  });
 };
 
 const TransactionHistoryPage: React.FC = () => {
@@ -223,13 +214,15 @@ const TransactionHistoryPage: React.FC = () => {
                       </Text>
                     </div>
                     <div>
-                      <span className={styles.label}>To UID:</span>{" "}
+                      <span className={styles.label}>To:</span>{" "}
                       <Text fontSize={["xs", "sm"]} isTruncated>
-                        {transaction.to}
+                        {transaction.to === "0x0000000000000000000000000000000000000000"
+                          ? "Contract Creation"
+                          : transaction.to}
                       </Text>
                     </div>
                     <div>
-                      <span className={styles.label}>From UID:</span>{" "}
+                      <span className={styles.label}>From:</span>{" "}
                       <Text fontSize={["xs", "sm"]} isTruncated>
                         {transaction.from}
                       </Text>
