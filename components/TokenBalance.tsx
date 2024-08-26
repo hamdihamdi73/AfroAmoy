@@ -46,30 +46,3 @@ export default function TokenBalance({ tokenAddress }: Props) {
     </Box>
   );
 }
-import { useEffect, useState } from "react";
-import { useContract, useContractRead } from "@thirdweb-dev/react";
-import { TRANSFER_CONTRACT_ADDRESS } from "../const/addresses";
-import { ethers } from "ethers";
-
-type Props = {
-  tokenAddress: string;
-};
-
-export default function TokenBalance({ tokenAddress }: Props) {
-  const { contract: transferContract } = useContract(TRANSFER_CONTRACT_ADDRESS);
-  const { data: tokenSupply } = useContractRead(transferContract, "getTokenSupply", [tokenAddress]);
-  const { data: tokenSymbol } = useContractRead(transferContract, "getTokenSymbol", [tokenAddress]);
-  const [formattedSupply, setFormattedSupply] = useState<string>("0");
-
-  useEffect(() => {
-    if (tokenSupply) {
-      setFormattedSupply(ethers.utils.formatUnits(tokenSupply, 18));
-    }
-  }, [tokenSupply]);
-
-  return (
-    <div>
-      <p>Balance: {formattedSupply} {tokenSymbol || ""}</p>
-    </div>
-  );
-}

@@ -20,7 +20,7 @@ import {
   } from "../const/addresses";
   
   export default function ClaimPage() {
-    const { contract } = useContract(CLAIM_TOKEN_CONTRACT_ADDRESS, "token-drop");
+    const { contract } = useContract(CLAIM_TOKEN_CONTRACT_ADDRESS, "mamaDo");
   
     const { data: contractMetadata } = useContractMetadata(contract);
   

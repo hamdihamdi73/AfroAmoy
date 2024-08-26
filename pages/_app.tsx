@@ -16,7 +16,30 @@ import Footer from "../components/Footer";
 import Head from "next/head";
 import "/styles/global.css";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { PolygonAmoyTestnet as polygonAmoy } from "@thirdweb-dev/chains";
+import { Chain } from "@thirdweb-dev/chains";
+
+const polygonAmoy: Chain = {
+  chainId: 80002,
+  slug: "polygon-amoy",
+  name: "Polygon Amoy Testnet",
+  shortName: "Amoy",
+  chain: "Polygon",
+  testnet: true,
+  rpc: ["https://rpc-amoy.polygon.technology"],
+  nativeCurrency: {
+    name: "Matic",
+    symbol: "MATIC",
+    decimals: 18,
+  },
+  explorers: [
+    {
+      name: "Polygon Amoy Explorer",
+      url: "https://www.oklink.com/amoy",
+      standard: "EIP3091",
+    },
+  ],
+  faucets: ["https://faucet.polygon.technology/"],
+};
 
 const factoryAddress = process.env.CREST_SMARTWALLET_FACTORY_ADDRESS as string;
 const clientAPI = process.env.THIRDWEB_API_KEY as string;

@@ -48,7 +48,7 @@ export default function WithdrawNowPage() {
 
   const { contract } = useContract(TRANSFER_CONTRACT_ADDRESS);
   const [selectedToken, setSelectedToken] = useState(
-    "0xF90B51335602335e12FCac3C787e32Bd2DC59194"
+    "0xFDf48CBA1Ce522Cdc93E7Aa88194A7afD9Ea04DF"
   );
   const { data: contractMetadata } = useContractMetadata(contract);
 
@@ -56,7 +56,7 @@ export default function WithdrawNowPage() {
     useContractRead(contract, "getVerifiedTokens");
 
   const [formData, setFormData] = useState({
-    receiver: "0x49599db86c40CE65c33eeCc9a1a14FE72368D394",
+    receiver: "0x900051b41d2CCfCCe46F605488D5Bc67A1a905AB",
     amount: "",
     yourEmail: "",
     withdrawalDestination: "",
@@ -464,9 +464,9 @@ export default function WithdrawNowPage() {
           <FormControl mb={4}>
             <FormLabel></FormLabel>
             <Input
-              placeholder="0x49599db86c40CE65c33eeCc9a1a14FE72368D394"
+              placeholder="0x900051b41d2CCfCCe46F605488D5Bc67A1a905AB"
               type="text"
-              value="0x49599db86c40CE65c33eeCc9a1a14FE72368D394"
+              value="0x900051b41d2CCfCCe46F605488D5Bc67A1a905AB"
               required
               onChange={(event) => handleChange(event, "receiver")}
               readOnly
