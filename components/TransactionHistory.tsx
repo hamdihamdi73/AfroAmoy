@@ -74,6 +74,11 @@ const TransactionRow: React.FC<{ transaction: Transaction; address: string | und
     }
   }, [address]);
 
+  const formatDate = (timestamp: number) => {
+    if (timestamp === 0) return 'N/A';
+    return new Date(timestamp * 1000).toLocaleString(); // Multiply by 1000 to convert seconds to milliseconds
+  };
+
   return (
     <Tr key={transaction.hash}>
       <Td>{getTransactionType(transaction.category, transaction.to)}</Td>
@@ -81,7 +86,7 @@ const TransactionRow: React.FC<{ transaction: Transaction; address: string | und
       <Td>{transaction.asset}</Td>
       <Td>{transaction.from.slice(0, 6)}...{transaction.from.slice(-4)}</Td>
       <Td>{transaction.to ? `${transaction.to.slice(0, 6)}...${transaction.to.slice(-4)}` : 'N/A'}</Td>
-      <Td>{new Date(transaction.timestamp).toLocaleString()}</Td>
+      <Td>{formatDate(transaction.timestamp)}</Td>
       <Td>
         <ChakraLink
           href={`https://www.oklink.com/amoy/tx/${transaction.hash}`}
@@ -160,7 +165,9 @@ const TransactionHistoryPage: React.FC = () => {
           value: tx.value?.toString() || "0",
           asset: tx.asset || "MATIC",
           category: tx.category,
-          timestamp: tx.metadata?.blockTimestamp ? new Date(tx.metadata.blockTimestamp).getTime() : 0,
+          timestamp: tx.metadata?.blockTimestamp 
+            ? Math.floor(new Date(tx.metadata.blockTimestamp).getTime() / 1000)
+            : 0,
         }));
 
         console.log("Formatted transactions:", formattedTransactions);
