@@ -43,11 +43,11 @@ const formatAmount = (value: string, decimals: number = 18, asset: string | null
     
     const numericValue = parseFloat(formattedAmount);
     if (isNaN(numericValue)) {
-      return "0";
+      return "0.00";
     }
     return numericValue.toLocaleString(undefined, {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 6,
     });
   } catch (error) {
     console.error("Error formatting amount:", error);
@@ -206,7 +206,7 @@ const TransactionHistoryPage: React.FC = () => {
                       <ChakraLink
                         fontSize={["xs", "sm"]}
                         isTruncated
-                        href={`https://amoy.polygonscan.com/tx/${transaction.hash}`}
+                        href={`https://www.oklink.com/amoy/tx/${transaction.hash}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         color="blue.500"
@@ -223,17 +223,15 @@ const TransactionHistoryPage: React.FC = () => {
                       </Text>
                     </div>
                     <div>
-                      <span className={styles.label}>To:</span>{" "}
+                      <span className={styles.label}>To UID:</span>{" "}
                       <Text fontSize={["xs", "sm"]} isTruncated>
                         {transaction.to}
                       </Text>
                     </div>
                     <div>
-                      <span className={styles.label}>From:</span>{" "}
+                      <span className={styles.label}>From UID:</span>{" "}
                       <Text fontSize={["xs", "sm"]} isTruncated>
-                        {transaction.from === "0x0000000000000000000000000000000000000000"
-                          ? "Contract Creation"
-                          : transaction.from}
+                        {transaction.from}
                       </Text>
                     </div>
                     <div>
