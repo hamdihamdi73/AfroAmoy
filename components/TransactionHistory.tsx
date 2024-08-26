@@ -82,13 +82,20 @@ const TransactionHistoryPage: React.FC = () => {
 
       try {
         console.log("Fetching transaction history for address:", address);
+        if (!process.env.NEXT_PUBLIC_ALCHEMY_API_KEY) {
+          throw new Error("Alchemy API key is not set");
+        }
+
         const config: AlchemySettings = {
           apiKey: process.env.NEXT_PUBLIC_ALCHEMY_API_KEY,
           network: Network.MATIC_MUMBAI,
         };
         const alchemy = new Alchemy(config);
 
-        console.log("Alchemy config:", config);
+        console.log("Alchemy config:", {
+          ...config,
+          apiKey: config.apiKey ? "Set" : "Not set"
+        });
 
         const transfers = await alchemy.core.getAssetTransfers({
           fromBlock: "0x0",
@@ -103,6 +110,8 @@ const TransactionHistoryPage: React.FC = () => {
         });
 
         console.log("Fetched transfers:", transfers);
+
+        console.log("Raw transfers data:", transfers);
 
         const formattedTransactions: Transaction[] = transfers.transfers.map((tx) => ({
           hash: tx.hash,
@@ -123,7 +132,13 @@ const TransactionHistoryPage: React.FC = () => {
         console.log("Set transactions:", sortedTransactions);
       } catch (error) {
         console.error("Error fetching transaction history:", error);
-        setError(`Failed to fetch transaction history: ${error.message}`);
+        let errorMessage = "An unknown error occurred";
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        } else if (typeof error === 'object' && error !== null) {
+          errorMessage = JSON.stringify(error);
+        }
+        setError(`Failed to fetch transaction history: ${errorMessage}`);
       } finally {
         setIsLoading(false);
       }
