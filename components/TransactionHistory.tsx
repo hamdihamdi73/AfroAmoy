@@ -51,7 +51,7 @@ const formatAmount = (value: string, decimals: number = 18, asset: string | null
     });
   } catch (error) {
     console.error("Error formatting amount:", error);
-    return "N/A";
+    return "0.00";
   }
 };
 
@@ -100,9 +100,11 @@ const TransactionHistoryPage: React.FC = () => {
 
         const formattedTransactions: Transaction[] = await Promise.all(transfers.transfers.map(async (tx) => {
           let asset = tx.asset;
+          let decimals = 18; // Default to 18 decimals for MATIC
           if (tx.rawContract && tx.rawContract.address) {
             const tokenMetadata = await alchemy.core.getTokenMetadata(tx.rawContract.address);
             asset = tokenMetadata.symbol || asset;
+            decimals = tokenMetadata.decimals || 18;
           }
           return {
             hash: tx.hash,
@@ -114,6 +116,7 @@ const TransactionHistoryPage: React.FC = () => {
             timestamp: tx.metadata?.blockTimestamp 
               ? Math.floor(new Date(tx.metadata.blockTimestamp).getTime() / 1000)
               : 0,
+            decimals: decimals,
           };
         }));
 
@@ -218,7 +221,7 @@ const TransactionHistoryPage: React.FC = () => {
                     <div>
                       <span className={styles.label}>Amount:</span>{" "}
                       <Text fontSize={["xs", "sm"]} isTruncated>
-                        {formatAmount(transaction.value, 18, transaction.asset)}{" "}
+                        {formatAmount(transaction.value, transaction.decimals, transaction.asset)}{" "}
                         <b>{transaction.asset || "MATIC"}</b>
                       </Text>
                     </div>
